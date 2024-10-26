@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
+import { AutocompleteSearchComponent } from './autocomplete-search'
 
 // Note: Replace with your actual Mapbox access token
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? '';
@@ -39,7 +40,8 @@ export function StormMapComponent() {
   const [stormData, setStormData] = useState<StormData[]>([])
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [filtersApplied, setFiltersApplied] = useState(false)
+    const [filtersApplied, setFiltersApplied] = useState(false)
+    const [selectedStormIds, setSelectedStormIds] = useState<string>('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -74,6 +76,10 @@ export function StormMapComponent() {
       map.current?.remove()
     }
   }, [loading, error])
+    
+    useEffect(() => {
+        addStormMarkers();
+    }, [selectedStormIds])
 
   const addStormMarkers = () => {
     if (!map.current) return
@@ -84,9 +90,7 @@ export function StormMapComponent() {
       existingMarkers[0].remove()
     }
 
-    if (!filtersApplied) return // Don't add markers if filters haven't been applied
-
-    stormData.forEach(storm => {
+    stormData.filter((storm) => selectedStormIds.toLowerCase().includes(storm.name.toLowerCase()) && selectedStormIds.toLowerCase().includes(storm.storm_id.toLowerCase())).forEach(storm => {
       storm.observations.forEach(obs => {
         if (
           (!startDate || obs.date >= startDate) &&
@@ -158,36 +162,9 @@ export function StormMapComponent() {
         <CardContent>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="search">Search by Storm Name</Label>
-              <Input
-                id="search"
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Enter storm name"
-              />
-            </div>
-            <div>
-              <Label htmlFor="startDate">Start Date</Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="endDate">End Date</Label>
-              <Input
-                id="endDate"
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
-            </div>
-            <div className="flex space-x-2">
-              <Button onClick={handleSearch} className="flex-1">Apply Filters</Button>
-              <Button onClick={handleReset} variant="outline" className="flex-1">Reset</Button>
+                          <Label htmlFor="search">Search by Storm Name</Label>
+                          {/* items={stormData.map((s) => s.name + ' ' + s.storm_id)} */}
+                          <AutocompleteSearchComponent displayItems={stormData.map((s) => s.name + ' ' + s.storm_id)} setSelectedItems={setSelectedStormIds}/>
             </div>
           </div>
         </CardContent>
