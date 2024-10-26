@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Set up scene
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x202020); // Dark grey background
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Load a cloud particle texture
+        const textureLoader = new THREE.TextureLoader();
+        // Replace with your texture path
+        // const cloudTexture = textureLoader.load('https://threejs.org/examples/textures/sprites/cloud.png'); // Replace with your texture path
+
+        // Create water plane geometry
+        const waterGeometry = new THREE.PlaneGeometry(50, 50);
+        const waterMaterial = new THREE.MeshBasicMaterial({ color: 0x1e90ff, transparent: true, opacity: 0.7 });
+        const water = new THREE.Mesh(waterGeometry, waterMaterial);
+        water.rotation.x = - Math.PI / 2;
+        water.position.y = -10;
+        scene.add(water);
+
+        
+        // Create geometry for evaporating water particles
+        const evaporateGeometry = new THREE.BufferGeometry();
+        const evaporateMaterial = new THREE.PointsMaterial({
+            color: 0x1e90ff,
+            size: 0.5,
+            transparent: true,
+            opacity: 0.8,
+            depthWrite: false
+        });
+
+        // Generate random positions for the evaporating water particles
+        const evaporateCount = 50;
+        const evaporatePositions = new Float32Array(evaporateCount * 3);
+        for (let i = 0; i < evaporateCount; i++) {
+            evaporatePositions[i * 3] = (Math.random() - 0.5) * 5;
+            evaporatePositions[i * 3 + 1] = -10 + Math.random(); // Start at water level and move upwards
+            evaporatePositions[i * 3 + 2] = (Math.random() - 0.5) * 5;
+        }
+
+        evaporateGeometry.setAttribute('position', new THREE.BufferAttribute(evaporatePositions, 3));
+        const evaporatingParticles = new THREE.Points(evaporateGeometry, evaporateMaterial);
+        scene.add(evaporatingParticles);
+
+        // Create the geometry and material for the cloud particles
+        const maxCloudParticles = 2000; // Set a max number for cloud particles
+        const cloudPositions = new Float32Array(maxCloudParticles * 3);
+        let currentCloudCount = 0;
+        const cloudGeometry = new THREE.BufferGeometry();
+        cloudGeometry.setAttribute('position', new THREE.BufferAttribute(cloudPositions, 3).setUsage(THREE.DynamicDrawUsage));
+        const cloudMaterial = new THREE.PointsMaterial({
+            size: 5,
+            transparent: true,
+            depthWrite: false,
+            blending: THREE.AdditiveBlending,
+        });
+        const cloudParticles = new THREE.Points(cloudGeometry, cloudMaterial);
+        scene.add(cloudParticles); // Add cloud particles to the scene but keep them empty initially
+
+        camera.position.z = 15;
+
+        // Animation loop
+        function animate() {
+            // Animate evaporating particles
+            const positions = evaporateGeometry.attributes.position.array;
+
+            for (let i = 0; i < evaporateCount; i++) {
+                positions[i * 3 + 1] += 0.02; // Move upwards
+
+                if (positions[i * 3 + 1] >= 10 && currentCloudCount < maxCloudParticles) {
+                    // Add evaporating particle position to cloud positions
+                    cloudPositions[currentCloudCount * 3] = positions[i * 3];
+                    cloudPositions[currentCloudCount * 3 + 1] = positions[i * 3 + 1];
+                    cloudPositions[currentCloudCount * 3 + 2] = positions[i * 3 + 2];
+                    currentCloudCount++;
+                    cloudGeometry.setDrawRange(0, currentCloudCount);
+                    cloudGeometry.attributes.position.needsUpdate = true;
+
+                    // Reset evaporating particle position
+                    positions[i * 3] = (Math.random() - 0.5) * 5;
+                    positions[i * 3 + 1] = -10 + Math.random();
+                    positions[i * 3 + 2] = (Math.random() - 0.5) * 5;
+                }
+            }
+
+            // Update cloud and evaporating particles geometry
+            cloudGeometry.attributes.position.needsUpdate = true;
+            evaporateGeometry.attributes.position.needsUpdate = true;
+
+            requestAnimationFrame(animate);
+
+            renderer.render(scene, camera);
+
+            // Update FPS counter
+            updateFPS();
+        }
+
+        animate();
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+    <div id="fpsCounter" style="position: absolute; bottom: 10px; left: 10px; color: white; font-family: Arial, sans-serif; font-size: 14px;">FPS: <span id="fpsValue"></span></div>
+    <script>
+        let lastTime = performance.now();
+        let frameCount = 0;
+
+        function updateFPS() {
+            const now = performance.now();
+            frameCount++;
+            if (now - lastTime >= 1000) {
+                const fps = frameCount;
+                document.getElementById('fpsValue').innerText = fps;
+                frameCount = 0;
+                lastTime = now;
+            }
+        }
+    </script>
+</body>
+</html>
