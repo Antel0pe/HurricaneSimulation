@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>NASA GIBS with Leaflet</title>
+  <meta charset="utf-8" />
+  <style>
+    #map { height: 100vh; }
+  </style>
+  <!-- Include Leaflet CSS and JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Include TimeDimension Plugin CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-timedimension@1.1.0/dist/leaflet.timedimension.control.min.css" />
+  <!-- Include ISO8601 Period Utility -->
+  <script src="https://unpkg.com/iso8601-js-period@0.2.1/iso8601.min.js"></script>
+  <!-- Include TimeDimension Plugin JS -->
+  <script src="https://unpkg.com/leaflet-timedimension@1.1.0/dist/leaflet.timedimension.min.js"></script>
+  <!-- Include TimeDimension TileLayer Extension -->
+  <script src="https://unpkg.com/leaflet-timedimension@1.1.0/dist/leaflet.timedimension.layer.tilelayer.min.js"></script>
+</head>
+<body>
+  <div id="map"></div>
+  <script>
+    // Create the TimeDimension object with options
+    var timeDimension = new L.TimeDimension({
+      timeInterval: "2022-01-01T00:00:00Z/2022-01-02T00:00:00Z",
+      period: "PT1H"
+    });
+
+    // Initialize the map with the TimeDimension object
+    var map = L.map('map', {
+      center: [40, -95],
+      zoom: 4,
+      timeDimension: timeDimension,
+      timeDimensionControl: true,
+      timeDimensionControlOptions: {
+        autoPlay: true,
+        loopButton: true,
+        timeSliderDragUpdate: true,
+        playerOptions: {
+          transitionTime: 500,
+          loop: true
+        }
+      }
+    });
+
+    // Add a base layer
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Define the NASA GIBS layer with placeholders
+    var gibsLayer = L.tileLayer(
+      'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/{layer}/default/{time}/{tileMatrixSet}/{z}/{y}/{x}.jpg', {
+        layer: 'VIIRS_SNPP_CorrectedReflectance_TrueColor',
+        tileMatrixSet: 'GoogleMapsCompatible_Level9',
+        tileSize: 256,
+        format: 'image/jpeg',
+        minZoom: 1,
+        maxZoom: 9,
+        attribution: 'Imagery courtesy of NASA/GSFC',
+        noWrap: true,
+        bounds: [[-85.0511287798066,-180], [85.0511287798066,180]]
+    });
+
+    // Wrap the GIBS layer with the TimeDimension layer and define a custom getUrlFunction
+    var gibsTimeLayer = L.timeDimension.layer.tileLayer(gibsLayer, {
+      updateTimeDimension: true,
+      setDefaultTime: true,
+      cache: 48,
+      getUrlFunction: function(coords, time) {
+        var date = new Date(time);
+        var dateISO = date.toISOString().split('T')[0]; // Format time as 'YYYY-MM-DD'
+        var url = gibsLayer.getTileUrl(coords).replace('{time}', dateISO);
+        return url;
+      }
+    }).addTo(map);
+  </script>
+</body>
+</html>
