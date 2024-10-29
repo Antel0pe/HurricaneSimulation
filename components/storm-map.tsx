@@ -1,10 +1,8 @@
 'use client'
 
 import React, { useEffect, useRef, useState } from 'react'
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css'
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css'
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
@@ -13,7 +11,7 @@ import { AutocompleteSearchComponent } from './autocomplete-search'
 import { DateSliderComponent } from './date-slider';
 
 // Note: Replace with your actual Mapbox access token
-mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? '';
+// mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? '';
 
 interface StormObservation {
     date: string
@@ -33,7 +31,7 @@ interface StormData {
 
 export function StormMapComponent() {
     const mapContainer = useRef<HTMLDivElement>(null)
-    const map = useRef<mapboxgl.Map | null>(null)
+    const map = useRef<maplibregl.Map | null>(null)
     const [stormData, setStormData] = useState<StormData[]>([])
     const [error, setError] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
@@ -61,19 +59,27 @@ export function StormMapComponent() {
     useEffect(() => {
         if (loading || error || !mapContainer.current) return
 
-        map.current = new mapboxgl.Map({
+        map.current = new maplibregl.Map({
             container: mapContainer.current,
-            style: 'mapbox://styles/mapbox/dark-v10',
+            style: 'https://demotiles.maplibre.org/style.json',
             center: [-75, 35], // Centered on the Atlantic
-            zoom: 3
+            zoom: 3,
         })
+
+        console.log('map is being set')
 
         return () => {
             map.current?.remove()
         }
     }, [loading, error])
 
+    useEffect(() => {
+        console.log('should be removed')
+        removeStormMarkers();
+    }, [selectedStormIds])
+
     map.current?.on('load', () => {
+        console.log('map has loaded')
         map.current?.addSource('gibs-tiles', {
             'type': 'raster',
             'tiles': [getGIBSUrl()],
@@ -112,26 +118,25 @@ export function StormMapComponent() {
 
     //https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/2017-09-26T00:00:00Z/250m/3/2/2.jpg
     const getGIBSUrl = (date: string = '2017-09-26') => {
-        // return `https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/${date}/250m/{z}/{y}/{x}.jpg`;
+        return `https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/${date}/250m/{z}/{y}/{x}.jpg`;
 
-        return `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/${date}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpeg`;
-        
+        // return `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/${date}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpeg`;
+
 
     }
 
-    
-
-
-
+    const removeStormMarkers = () => {
+        // Remove existing markers
+        const existingMarkers = document.getElementsByClassName('maplibregl-marker')
+        while (existingMarkers[0]) {
+            existingMarkers[0].remove()
+        }
+    }
 
     const addStormMarkers = () => {
         if (!map.current) return
 
-        // Remove existing markers
-        const existingMarkers = document.getElementsByClassName('mapboxgl-marker')
-        while (existingMarkers[0]) {
-            existingMarkers[0].remove()
-        }
+        removeStormMarkers();
 
         let newMarkersLatLong: number[][] = [];
 
@@ -178,7 +183,7 @@ export function StormMapComponent() {
     }
 
     const plotObservation = (stormName: string, obs: StormObservation) => {
-        const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
+        const popup = new maplibregl.Popup({ offset: 25 }).setHTML(
             `<h3>${stormName}</h3>
              <p>Date: ${obs.date}</p>
              <p>Time: ${obs.time}</p>
@@ -186,7 +191,7 @@ export function StormMapComponent() {
              <p>Pressure: ${obs.pressure === -999 ? 'N/A' : obs.pressure + ' mb'}</p>`
         )
 
-        new mapboxgl.Marker({
+        return new maplibregl.Marker({
             color: getColorForWindSpeed(obs.wind_speed)
         })
             .setLngLat([obs.longitude, obs.latitude])
@@ -239,7 +244,12 @@ export function StormMapComponent() {
         if (filteredStorms) {
             let newObs = filteredStorms.observations[idx];
             updateMapWhenDateChanges(newObs.date);
-            plotObservation(selectedStormIds, newObs);
+            let marker = plotObservation(selectedStormIds, newObs);
+
+            // fly to the first marker 
+            if (idx === 0) {
+                map.current?.flyTo({ center: marker.getLngLat() })
+            }
 
         }
 
@@ -250,49 +260,53 @@ export function StormMapComponent() {
         if (!map.current || !map.current.isStyleLoaded()) return;
 
         const source = map.current.getSource('gibs-tiles');
-        if (source && source.type === 'raster') {
-            // Update the tiles URL with the new date
+
+        // if (source && source.type === 'raster') {
+        // Update the tiles URL with the new date
+
+        // Update the tiles property
+        // source.tiles = newTiles;
+
+        // Mapbox GL JS does not automatically detect changes to the tiles array,
+        // so you need to trigger a reload. One way is to use setTiles if available,
+        // but if not, you might need to remove and re-add the source.
+
+        // if (typeof source.setTiles === 'function') {
+        //     source.setTiles(newTiles);
+        // }
+        if (source) {
             const newTiles = [getGIBSUrl(date)];
-
-            // Update the tiles property
-            source.tiles = newTiles;
-
-            // Mapbox GL JS does not automatically detect changes to the tiles array,
-            // so you need to trigger a reload. One way is to use setTiles if available,
-            // but if not, you might need to remove and re-add the source.
-
-            if (typeof source.setTiles === 'function') {
-                source.setTiles(newTiles);
+            // Remove the existing source and layer
+            if (map.current.getLayer('gibs-layer')) {
+                map.current.removeLayer('gibs-layer');
             }
-            // else {
-            //     // Remove and re-add the source to force Mapbox to reload tiles
-            //     mapRef.current.removeLayer('gibs-layer');
-            //     mapRef.current.removeSource('gibs-tiles');
+            if (map.current.getSource('gibs-tiles')) {
+                map.current.removeSource('gibs-tiles');
+            }
 
-            //     // Re-add the source with updated tiles
-            //     mapRef.current.addSource('gibs-tiles', {
-            //         type: 'raster',
-            //         tiles: newTiles,
-            //         tileSize: 256,
-            //         attribution: 'Imagery courtesy of NASA/GSFC',
-            //     });
+            // Re-add the source with updated tiles
+            map.current.addSource('gibs-tiles', {
+                type: 'raster',
+                tiles: newTiles,
+                tileSize: 256,
+                attribution: 'Imagery courtesy of NASA/GSFC',
+            });
 
-            //     // Re-add the layer
-            //     mapRef.current.addLayer({
-            //         id: 'gibs-layer',
-            //         type: 'raster',
-            //         source: 'gibs-tiles',
-            //         minzoom: 3,
-            //         maxzoom: 9,
-            //         // Uncomment to adjust opacity
-            //         // paint: {
-            //         //   'raster-opacity': 0.8
-            //         // }
-            //     });
-            // }
-
-            console.log(`GIBS layer updated to date: ${date}`);
+            // Re-add the layer
+            map.current.addLayer({
+                id: 'gibs-layer',
+                type: 'raster',
+                source: 'gibs-tiles',
+                minzoom: 3,
+                maxzoom: 9,
+                // Uncomment to adjust opacity
+                // paint: {
+                //   'raster-opacity': 0.8
+                // }
+            });
         }
+
+        console.log(`GIBS layer updated to date: ${date}`);
     }
 
     return (
