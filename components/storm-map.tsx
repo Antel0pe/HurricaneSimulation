@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useRef, useState } from 'react'
-import mapboxgl from 'mapbox-gl'
+import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
 import { AutocompleteSearchComponent } from './autocomplete-search'
+import { DateSliderComponent } from './date-slider';
 
 // Note: Replace with your actual Mapbox access token
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? '';
@@ -33,14 +34,9 @@ interface StormData {
 export function StormMapComponent() {
     const mapContainer = useRef<HTMLDivElement>(null)
     const map = useRef<mapboxgl.Map | null>(null)
-    const [searchTerm, setSearchTerm] = useState('')
-    const [minWindSpeed, setMinWindSpeed] = useState(0)
-    const [startDate, setStartDate] = useState('')
-    const [endDate, setEndDate] = useState('')
     const [stormData, setStormData] = useState<StormData[]>([])
     const [error, setError] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
-    const [filtersApplied, setFiltersApplied] = useState(false)
     const [selectedStormIds, setSelectedStormIds] = useState<string>('');
 
     useEffect(() => {
@@ -76,34 +72,24 @@ export function StormMapComponent() {
             map.current?.remove()
         }
     }, [loading, error])
-    
+
     map.current?.on('load', () => {
-        // Calculate bounds for the tile (TileMatrix=3, TileRow=2, TileCol=2)
-const tileWidth = 45; // degrees longitude
-const tileHeight = 45; // degrees latitude
-const col = 2;
-const row = 2;
-
-const west = -180 + (col * tileWidth);
-const east = west + tileWidth;
-const south = -90 + (row * tileHeight);
-const north = south + tileHeight;
-
-// Set the bounds for the source
-const bounds: [number, number, number, number] = [west, south, east, north];
         map.current?.addSource('gibs-tiles', {
             'type': 'raster',
             'tiles': [getGIBSUrl()],
-            'bounds': bounds
+            // 'bounds': bounds,
+            'attribution': 'Imagery courtesy of NASA/GSFC'
         });
 
         map.current?.addLayer({
             'id': 'gibs-layer',
             'type': 'raster',
             'source': 'gibs-tiles',
-            'paint': {
-                'raster-opacity': 0.8
-            }
+            'minzoom': 3,
+            'maxzoom': 9,
+            // 'paint': {
+            //     'raster-opacity': 0.8
+            // }
         });
     });
 
@@ -125,19 +111,17 @@ const bounds: [number, number, number, number] = [west, south, east, north];
     }
 
     //https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/2017-09-26T00:00:00Z/250m/3/2/2.jpg
-    const getGIBSUrl = (date: string ='2017-09-26T00:00:00Z', zoom: string = '3', row: string = '2', col: string = '2') => {
-        return `https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/${date}/250m/${zoom}/${row}/${col}.jpg`;
+    const getGIBSUrl = (date: string = '2017-09-26') => {
+        // return `https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/${date}/250m/{z}/{y}/{x}.jpg`;
+
+        return `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/${date}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpeg`;
+        
+
     }
 
-    useEffect(() => {
-        let newMarkers = addStormMarkers();
-
-        if (newMarkers && newMarkers.length > 0) {
-            
-        }
-    }, [selectedStormIds])
-
     
+
+
 
 
     const addStormMarkers = () => {
@@ -151,33 +135,73 @@ const bounds: [number, number, number, number] = [west, south, east, north];
 
         let newMarkersLatLong: number[][] = [];
 
-        stormData.filter((storm) => selectedStormIds.includes(createStormName(storm)))
-            .forEach(storm => {
-                storm.observations.forEach(obs => {
-                    newMarkersLatLong.push([obs.latitude, obs.longitude]);
-                    const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
-                        `<h3>${storm.name}</h3>
+        let filteredStorms = getStorm(selectedStormIds);
+        filteredStorms.forEach(storm => {
+
+            storm.observations.forEach(obs => {
+                newMarkersLatLong.push([obs.latitude, obs.longitude]);
+                // plotObservation(storm.name, obs);
+            }
+            )
+        })
+
+        // Add your point data
+        // map.current?.addSource('hurricane-points', {
+        //     'type': 'geojson',
+        //     'data': {
+        //         'type': 'FeatureCollection',
+        //         'features': filteredStorms.flatMap((s) => s.observations).map((obs) => ({
+        //             'type': 'Feature',
+        //             'geometry': {
+        //                 'type': 'Point',
+        //                 'coordinates': [obs.longitude, obs.latitude],
+        //             },
+        //             'properties': {
+        //                 'timestamp': obs.date + ' ' + obs.time,
+        //             },
+        //         })),
+        //     },
+        // });
+
+        // Add a layer to display the points
+        // map.current?.addLayer({
+        //     'id': 'hurricane-points-layer',
+        //     'type': 'circle',
+        //     'source': 'hurricane-points',
+        //     'paint': {
+        //         'circle-radius': 6,
+        //         'circle-color': '#ff0000',
+        //     },
+        // });
+
+        return newMarkersLatLong;
+    }
+
+    const plotObservation = (stormName: string, obs: StormObservation) => {
+        const popup = new mapboxgl.Popup({ offset: 25 }).setHTML(
+            `<h3>${stormName}</h3>
              <p>Date: ${obs.date}</p>
              <p>Time: ${obs.time}</p>
              <p>Wind Speed: ${obs.wind_speed} knots</p>
              <p>Pressure: ${obs.pressure === -999 ? 'N/A' : obs.pressure + ' mb'}</p>`
-                    )
+        )
 
-                    new mapboxgl.Marker({
-                        color: getColorForWindSpeed(obs.wind_speed)
-                    })
-                        .setLngLat([obs.longitude, obs.latitude])
-                        .setPopup(popup)
-                        .addTo(map.current!)
-                }
-                )
-            })
-        
-        return newMarkersLatLong;
+        new mapboxgl.Marker({
+            color: getColorForWindSpeed(obs.wind_speed)
+        })
+            .setLngLat([obs.longitude, obs.latitude])
+            .setPopup(popup)
+            .addTo(map.current!)
+
+
     }
 
     const createStormName = (data: StormData) => {
         return data.name + ' ' + data.storm_id;
+    }
+
+    const getStorm = (name: string) => {
+        return stormData.filter((storm) => name.includes(createStormName(storm)));
     }
 
     const getColorForWindSpeed = (windSpeed: number): string => {
@@ -203,6 +227,74 @@ const bounds: [number, number, number, number] = [west, south, east, north];
         )
     }
 
+    const getUniqueDatesOfStorm = () => {
+        let dates = getStorm(selectedStormIds).flatMap((s) => s.observations).map((s) => s.date);
+        let uniqueDates: string[] = Array.from(new Set(dates));
+        return uniqueDates;
+    }
+
+    const onDateChange = (idx: number) => {
+        let filteredStorms = getStorm(selectedStormIds)[0];
+
+        if (filteredStorms) {
+            let newObs = filteredStorms.observations[idx];
+            updateMapWhenDateChanges(newObs.date);
+            plotObservation(selectedStormIds, newObs);
+
+        }
+
+    }
+
+    // Update the GIBS source when the selectedDate changes
+    const updateMapWhenDateChanges = (date: string) => {
+        if (!map.current || !map.current.isStyleLoaded()) return;
+
+        const source = map.current.getSource('gibs-tiles');
+        if (source && source.type === 'raster') {
+            // Update the tiles URL with the new date
+            const newTiles = [getGIBSUrl(date)];
+
+            // Update the tiles property
+            source.tiles = newTiles;
+
+            // Mapbox GL JS does not automatically detect changes to the tiles array,
+            // so you need to trigger a reload. One way is to use setTiles if available,
+            // but if not, you might need to remove and re-add the source.
+
+            if (typeof source.setTiles === 'function') {
+                source.setTiles(newTiles);
+            }
+            // else {
+            //     // Remove and re-add the source to force Mapbox to reload tiles
+            //     mapRef.current.removeLayer('gibs-layer');
+            //     mapRef.current.removeSource('gibs-tiles');
+
+            //     // Re-add the source with updated tiles
+            //     mapRef.current.addSource('gibs-tiles', {
+            //         type: 'raster',
+            //         tiles: newTiles,
+            //         tileSize: 256,
+            //         attribution: 'Imagery courtesy of NASA/GSFC',
+            //     });
+
+            //     // Re-add the layer
+            //     mapRef.current.addLayer({
+            //         id: 'gibs-layer',
+            //         type: 'raster',
+            //         source: 'gibs-tiles',
+            //         minzoom: 3,
+            //         maxzoom: 9,
+            //         // Uncomment to adjust opacity
+            //         // paint: {
+            //         //   'raster-opacity': 0.8
+            //         // }
+            //     });
+            // }
+
+            console.log(`GIBS layer updated to date: ${date}`);
+        }
+    }
+
     return (
         <div className="h-screen flex">
             <Card className="w-1/4 p-4 overflow-y-auto">
@@ -215,8 +307,10 @@ const bounds: [number, number, number, number] = [west, south, east, north];
                             <Label htmlFor="search">Search by Storm Name</Label>
                             {/* items={stormData.map((s) => s.name + ' ' + s.storm_id)} */}
                             <AutocompleteSearchComponent displayItems={stormData.map((d) => createStormName(d))} setSelectedItems={setSelectedStormIds} />
+
                         </div>
                     </div>
+                    <DateSliderComponent sliderDates={getUniqueDatesOfStorm()} onDateChange={onDateChange} />
                 </CardContent>
             </Card>
             <div ref={mapContainer} className="w-3/4" />
