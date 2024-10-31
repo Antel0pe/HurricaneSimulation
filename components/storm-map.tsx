@@ -1,14 +1,15 @@
 'use client'
 
 import React, { useEffect, useRef, useState } from 'react'
-import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css'
+import 'leaflet/dist/leaflet.css'
+import * as L from 'leaflet';
+import 'proj4leaflet';
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
 import { AutocompleteSearchComponent } from './autocomplete-search'
-import { DateSliderComponent } from './date-slider';
+import { DateSliderComponent } from './date-slider'
 
 // Note: Replace with your actual Mapbox access token
 // mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? '';
@@ -31,7 +32,9 @@ interface StormData {
 
 export function StormMapComponent() {
     const mapContainer = useRef<HTMLDivElement>(null)
-    const map = useRef<maplibregl.Map | null>(null)
+    const map = useRef<L.Map | null>(null)
+    const gibsLayerRef = useRef<L.TileLayer | null>(null)
+    const markersRef = useRef<L.Layer[]>([])
     const [stormData, setStormData] = useState<StormData[]>([])
     const [error, setError] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
@@ -56,15 +59,88 @@ export function StormMapComponent() {
         fetchData()
     }, [])
 
+
+
     useEffect(() => {
         if (loading || error || !mapContainer.current) return
 
-        map.current = new maplibregl.Map({
-            container: mapContainer.current,
-            style: 'https://demotiles.maplibre.org/style.json',
-            center: [-75, 35], // Centered on the Atlantic
-            zoom: 3,
-        })
+        // let EPSG4326 = new L.Proj.CRS(
+        //     'EPSG:4326',
+        //     '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs', {
+        //     origin: [-180, 90],
+        //     resolutions: [
+        //         0.5625,
+        //         0.28125,
+        //         0.140625,
+        //         0.0703125,
+        //         0.03515625,
+        //         0.017578125,
+        //         0.0087890625,
+        //         0.00439453125,
+        //         0.002197265625
+        //     ],
+        //     bounds: new L.Bounds([
+        //         [-180, -90],
+        //         [180, 90]
+        //     ])
+        // }
+        // );
+
+        // map.current = L.map('map', {
+        //     center: [0, 0],
+        //     zoom: 2,
+        //     maxZoom: 8,
+        //     crs: EPSG4326,
+        //     maxBounds: [
+        //         [-120, -220],
+        //         [120, 220]
+        //     ]
+        // });
+
+
+
+        // // Add base map layer
+        // L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        //     attribution: '&copy; OpenStreetMap contributors',
+        // }).addTo(map.current);
+
+        // let template =
+        //     'https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/{layer}/default/{date}/{tileMatrixSet}/{z}/{y}/{x}.{image}';
+        // // '//gibs-{s}.earthdata.nasa.gov/wmts/epsg4326/best/' +
+        // // '{layer}/default/{time}/{tileMatrixSet}/{z}/{y}/{x}.jpg';
+
+        // let layer = L.tileLayer(template, {
+        //     layer: 'GOES-East_ABI_Band13_Clean_Infrared',
+        //     tileMatrixSet: '2km',
+        //     // time: '2013-11-04',
+        //     tileSize: 512,
+        //     subdomains: 'abc',
+        //     noWrap: true,
+        //     date: '2019-09-01T17:00:00Z',
+        //     image: 'png',
+        //     continuousWorld: true,
+        //     // Prevent Leaflet from retrieving non-existent tiles on the
+        //     // borders.
+        //     bounds: [
+        //         [-89.9999, -179.9999],
+        //         [89.9999, 179.9999]
+        //     ],
+        //     attribution:
+        //         '<a href="https://wiki.earthdata.nasa.gov/display/GIBS">' +
+        //         'NASA EOSDIS GIBS</a>&nbsp;&nbsp;&nbsp;' +
+        //         '<a href="https://github.com/nasa-gibs/web-examples/blob/main/examples/leaflet/geographic-epsg4326.js">' +
+        //         'View Source' +
+        //         '</a>'
+        // } as TileLayerOptions);
+
+        // map?.current.addLayer(layer);
+
+        // // Add GIBS layer
+        // gibsLayerRef.current = L.tileLayer(getGIBSUrl(), {
+        //     attribution: 'Imagery courtesy of NASA/GSFC',
+        //     tileSize: 256,
+        //     // Other options if necessary
+        // }).addTo(map.current)
 
         console.log('map is being set')
 
@@ -75,29 +151,9 @@ export function StormMapComponent() {
 
     useEffect(() => {
         console.log('should be removed')
-        removeStormMarkers();
+        removeStormMarkers()
+        addStormMarkers()
     }, [selectedStormIds])
-
-    map.current?.on('load', () => {
-        console.log('map has loaded')
-        map.current?.addSource('gibs-tiles', {
-            'type': 'raster',
-            'tiles': [getGIBSUrl()],
-            // 'bounds': bounds,
-            'attribution': 'Imagery courtesy of NASA/GSFC'
-        });
-
-        map.current?.addLayer({
-            'id': 'gibs-layer',
-            'type': 'raster',
-            'source': 'gibs-tiles',
-            'minzoom': 3,
-            'maxzoom': 9,
-            // 'paint': {
-            //     'raster-opacity': 0.8
-            // }
-        });
-    });
 
     const getLatLongGivenTiles = (row: number, col: number, zoom: number) => {
         let n = 2 ^ zoom;
@@ -118,95 +174,64 @@ export function StormMapComponent() {
 
     //https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/2017-09-26T00:00:00Z/250m/3/2/2.jpg
     const getGIBSUrl = (date: string = '2017-09-26') => {
-        return `https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/${date}/250m/{z}/{y}/{x}.jpg`;
+        // return `https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/${date}/250m/{z}/{y}/{x}.jpg`;
 
-        // return `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/${date}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpeg`;
-
-
+        return `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/${date}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpeg`;
     }
 
     const removeStormMarkers = () => {
-        // Remove existing markers
-        const existingMarkers = document.getElementsByClassName('maplibregl-marker')
-        while (existingMarkers[0]) {
-            existingMarkers[0].remove()
-        }
+        if (!map.current) return
+        markersRef.current.forEach(marker => {
+            map.current!.removeLayer(marker)
+        })
+        markersRef.current = []
     }
 
     const addStormMarkers = () => {
         if (!map.current) return
 
-        removeStormMarkers();
+        removeStormMarkers()
 
-        let newMarkersLatLong: number[][] = [];
+        let newMarkersLatLong: number[][] = []
 
-        let filteredStorms = getStorm(selectedStormIds);
+        let filteredStorms = getStorm(selectedStormIds)
         filteredStorms.forEach(storm => {
-
             storm.observations.forEach(obs => {
-                newMarkersLatLong.push([obs.latitude, obs.longitude]);
-                // plotObservation(storm.name, obs);
-            }
-            )
+                newMarkersLatLong.push([obs.latitude, obs.longitude])
+                let marker = plotObservation(storm.name, obs)
+                markersRef.current.push(marker)
+            })
         })
 
-        // Add your point data
-        // map.current?.addSource('hurricane-points', {
-        //     'type': 'geojson',
-        //     'data': {
-        //         'type': 'FeatureCollection',
-        //         'features': filteredStorms.flatMap((s) => s.observations).map((obs) => ({
-        //             'type': 'Feature',
-        //             'geometry': {
-        //                 'type': 'Point',
-        //                 'coordinates': [obs.longitude, obs.latitude],
-        //             },
-        //             'properties': {
-        //                 'timestamp': obs.date + ' ' + obs.time,
-        //             },
-        //         })),
-        //     },
-        // });
-
-        // Add a layer to display the points
-        // map.current?.addLayer({
-        //     'id': 'hurricane-points-layer',
-        //     'type': 'circle',
-        //     'source': 'hurricane-points',
-        //     'paint': {
-        //         'circle-radius': 6,
-        //         'circle-color': '#ff0000',
-        //     },
-        // });
-
-        return newMarkersLatLong;
+        return newMarkersLatLong
     }
 
     const plotObservation = (stormName: string, obs: StormObservation) => {
-        const popup = new maplibregl.Popup({ offset: 25 }).setHTML(
-            `<h3>${stormName}</h3>
-             <p>Date: ${obs.date}</p>
-             <p>Time: ${obs.time}</p>
-             <p>Wind Speed: ${obs.wind_speed} knots</p>
-             <p>Pressure: ${obs.pressure === -999 ? 'N/A' : obs.pressure + ' mb'}</p>`
-        )
+        const popupContent = `<h3>${stormName}</h3>
+            <p>Date: ${obs.date}</p>
+            <p>Time: ${obs.time}</p>
+            <p>Wind Speed: ${obs.wind_speed} knots</p>
+            <p>Pressure: ${obs.pressure === -999 ? 'N/A' : obs.pressure + ' mb'}</p>`
 
-        return new maplibregl.Marker({
-            color: getColorForWindSpeed(obs.wind_speed)
+        const marker = L.circleMarker([obs.latitude, obs.longitude], {
+            color: getColorForWindSpeed(obs.wind_speed),
+            fillColor: getColorForWindSpeed(obs.wind_speed),
+            radius: 6,
+            fillOpacity: 1,
+            weight: 1,
         })
-            .setLngLat([obs.longitude, obs.latitude])
-            .setPopup(popup)
+            .bindPopup(popupContent)
             .addTo(map.current!)
 
-
+        return marker
     }
 
     const createStormName = (data: StormData) => {
-        return data.name + ' ' + data.storm_id;
+        return data.name + ' ' + data.storm_id
     }
 
     const getStorm = (name: string) => {
-        return stormData.filter((storm) => name.includes(createStormName(storm)));
+        return stormData.filter((storm) => name.includes(createStormName(storm)))
     }
 
     const getColorForWindSpeed = (windSpeed: number): string => {
@@ -233,80 +258,43 @@ export function StormMapComponent() {
     }
 
     const getUniqueDatesOfStorm = () => {
-        let dates = getStorm(selectedStormIds).flatMap((s) => s.observations).map((s) => s.date);
-        let uniqueDates: string[] = Array.from(new Set(dates));
-        return uniqueDates;
+        let dates = getStorm(selectedStormIds).flatMap((s) => s.observations).map((s) => s.date)
+        let uniqueDates: string[] = Array.from(new Set(dates))
+        return uniqueDates
     }
 
     const onDateChange = (idx: number) => {
-        let filteredStorms = getStorm(selectedStormIds)[0];
+        let filteredStorms = getStorm(selectedStormIds)[0]
 
         if (filteredStorms) {
-            let newObs = filteredStorms.observations[idx];
-            updateMapWhenDateChanges(newObs.date);
-            let marker = plotObservation(selectedStormIds, newObs);
+            let newObs = filteredStorms.observations[idx]
+            updateMapWhenDateChanges(newObs.date)
+            let marker = plotObservation(selectedStormIds, newObs)
 
-            // fly to the first marker 
+            // fly to the first marker
             if (idx === 0) {
-                map.current?.flyTo({ center: marker.getLngLat() })
+                map.current?.setView([newObs.latitude, newObs.longitude], map.current.getZoom())
             }
-
         }
-
     }
 
     // Update the GIBS source when the selectedDate changes
     const updateMapWhenDateChanges = (date: string) => {
-        if (!map.current || !map.current.isStyleLoaded()) return;
+        if (!map.current) return
 
-        const source = map.current.getSource('gibs-tiles');
-
-        // if (source && source.type === 'raster') {
-        // Update the tiles URL with the new date
-
-        // Update the tiles property
-        // source.tiles = newTiles;
-
-        // Mapbox GL JS does not automatically detect changes to the tiles array,
-        // so you need to trigger a reload. One way is to use setTiles if available,
-        // but if not, you might need to remove and re-add the source.
-
-        // if (typeof source.setTiles === 'function') {
-        //     source.setTiles(newTiles);
-        // }
-        if (source) {
-            const newTiles = [getGIBSUrl(date)];
-            // Remove the existing source and layer
-            if (map.current.getLayer('gibs-layer')) {
-                map.current.removeLayer('gibs-layer');
-            }
-            if (map.current.getSource('gibs-tiles')) {
-                map.current.removeSource('gibs-tiles');
-            }
-
-            // Re-add the source with updated tiles
-            map.current.addSource('gibs-tiles', {
-                type: 'raster',
-                tiles: newTiles,
-                tileSize: 256,
-                attribution: 'Imagery courtesy of NASA/GSFC',
-            });
-
-            // Re-add the layer
-            map.current.addLayer({
-                id: 'gibs-layer',
-                type: 'raster',
-                source: 'gibs-tiles',
-                minzoom: 3,
-                maxzoom: 9,
-                // Uncomment to adjust opacity
-                // paint: {
-                //   'raster-opacity': 0.8
-                // }
-            });
+        // Remove existing GIBS layer if any
+        if (gibsLayerRef.current) {
+            map.current.removeLayer(gibsLayerRef.current)
         }
 
-        console.log(`GIBS layer updated to date: ${date}`);
+        // Add new GIBS layer with updated date
+        gibsLayerRef.current = L.tileLayer(getGIBSUrl(date), {
+            attribution: 'Imagery courtesy of NASA/GSFC',
+            tileSize: 256,
+            // Other options if necessary
+        }).addTo(map.current)
+
+        console.log(`GIBS layer updated to date: ${date}`)
     }
 
     return (
@@ -321,13 +309,83 @@ export function StormMapComponent() {
                             <Label htmlFor="search">Search by Storm Name</Label>
                             {/* items={stormData.map((s) => s.name + ' ' + s.storm_id)} */}
                             <AutocompleteSearchComponent displayItems={stormData.map((d) => createStormName(d))} setSelectedItems={setSelectedStormIds} />
-
                         </div>
                     </div>
                     <DateSliderComponent sliderDates={getUniqueDatesOfStorm()} onDateChange={onDateChange} />
                 </CardContent>
             </Card>
-            <div ref={mapContainer} className="w-3/4" />
+            <div ref={mapContainer} id='map' className="w-3/4" />
         </div>
     )
 }
+
+window.onload = function () {
+    console.log('??dsa?')
+    var EPSG4326 = new L.Proj.CRS(
+        'EPSG:4326',
+        '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs', {
+        origin: [-180, 90],
+        resolutions: [
+            0.5625,
+            0.28125,
+            0.140625,
+            0.0703125,
+            0.03515625,
+            0.017578125,
+            0.0087890625,
+            0.00439453125,
+            0.002197265625
+        ],
+        // Values are x and y here instead of lat and long elsewhere.
+        bounds: new L.Bounds([
+            [-180, -90],
+            [180, 90]
+        ])
+    }
+    );
+    console.log('proj')
+
+    var map = L.map('map', {
+        center: [0, 0],
+        zoom: 2,
+        maxZoom: 8,
+        crs: EPSG4326,
+        maxBounds: [
+            [-120, -220],
+            [120, 220]
+        ]
+    });
+    console.log('hope?')
+
+    var template =
+        'https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/{layer}/default/{date}/{tileMatrixSet}/{z}/{y}/{x}.{image}';
+    // '//gibs-{s}.earthdata.nasa.gov/wmts/epsg4326/best/' +
+    // '{layer}/default/{time}/{tileMatrixSet}/{z}/{y}/{x}.jpg';
+
+    var layer = L.tileLayer(template, {
+        layer: 'GOES-East_ABI_Band13_Clean_Infrared',
+        tileMatrixSet: '2km',
+        // time: '2013-11-04',
+        tileSize: 512,
+        subdomains: 'abc',
+        noWrap: true,
+        date: '2019-09-01T17:00:00Z',
+        image: 'png',
+        continuousWorld: true,
+        // Prevent Leaflet from retrieving non-existent tiles on the
+        // borders.
+        bounds: [
+            [-89.9999, -179.9999],
+            [89.9999, 179.9999]
+        ],
+        attribution:
+            '<a href="https://wiki.earthdata.nasa.gov/display/GIBS">' +
+            'NASA EOSDIS GIBS</a>&nbsp;&nbsp;&nbsp;' +
+            '<a href="https://github.com/nasa-gibs/web-examples/blob/main/examples/leaflet/geographic-epsg4326.js">' +
+            'View Source' +
+            '</a>'
+    } as L.TileLayerOptions);
+    console.log('should be setting proj map')
+
+    map.addLayer(layer);
+};

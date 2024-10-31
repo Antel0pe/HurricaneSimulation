@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { ChevronLeft, ChevronRight, Play, Pause } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
+import { useEffect } from "react"
 
 interface DateSliderProps {
     sliderDates: string[]
@@ -14,6 +15,10 @@ interface DateSliderProps {
 export function DateSliderComponent({ sliderDates, onDateChange }: DateSliderProps) {
     const [currentIndex, setCurrentIndex] = React.useState(0)
     const [isPlaying, setIsPlaying] = React.useState(false)
+
+    useEffect(() => {
+        console.log(sliderDates)
+    }, [sliderDates])
 
     const nextSlide = () => {
         setCurrentIndex((prevIndex) => (prevIndex + 1) % sliderDates.length)
