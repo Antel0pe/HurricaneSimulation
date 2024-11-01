@@ -9,7 +9,11 @@ import proj4 from 'proj4';
 import 'proj4leaflet';
 import GIBSTileLayer from './testGIBS';
 
-const ProjCRSMap: React.FC = () => {
+type Props = {
+    children?: React.ReactNode,
+  }
+
+const EPSG4326Map = ( { children }: Props) => {
     // Define the custom CRS using proj4leaflet
     const EPSG4326 = new L.Proj.CRS(
         'EPSG:4326',
@@ -40,19 +44,10 @@ const ProjCRSMap: React.FC = () => {
 
             style={{ height: '100vh', width: '100%' }}
         >
-            <WMSTileLayer
-                url="https://ows.terrestris.de/osm/service?"
-                layers="OSM-WMS"
-                format="image/png"
-                transparent={false}
-                attribution="&copy; OpenStreetMap contributors"
-                // continuousWorld={true}
-                noWrap={true}
-            />
-            {/* GIBS Tile Layer */}
-            <GIBSTileLayer />
+            
+            { children }
         </MapContainer>
     );
 };
 
-export default ProjCRSMap;
+export default EPSG4326Map;

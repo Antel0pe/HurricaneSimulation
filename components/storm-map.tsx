@@ -155,22 +155,6 @@ export function StormMapComponent() {
         addStormMarkers()
     }, [selectedStormIds])
 
-    const getLatLongGivenTiles = (row: number, col: number, zoom: number) => {
-        let n = 2 ^ zoom;
-        let lon_deg = row / n * 360.0 - 180.0;
-        let lat_rad = Math.atan(Math.sinh(Math.PI * (1 - 2 * col / n)));
-        let lat_deg = lat_rad * 180.0 / Math.PI;
-
-        return [lat_deg, lon_deg];
-    }
-
-    const getTilesGivenLatLong = (zoom: number, lat: number, long: number) => {
-        let n = 2 ^ zoom
-        let xtile = n * ((long + 180) / 360)
-        let ytile = n * (1 - (Math.log(Math.tan(lat) + Math.acos(lat)) / Math.PI)) / 2
-
-        return [xtile, ytile]
-    }
 
     //https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/2017-09-26T00:00:00Z/250m/3/2/2.jpg
     const getGIBSUrl = (date: string = '2017-09-26') => {
@@ -318,74 +302,3 @@ export function StormMapComponent() {
         </div>
     )
 }
-
-window.onload = function () {
-    console.log('??dsa?')
-    var EPSG4326 = new L.Proj.CRS(
-        'EPSG:4326',
-        '+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs', {
-        origin: [-180, 90],
-        resolutions: [
-            0.5625,
-            0.28125,
-            0.140625,
-            0.0703125,
-            0.03515625,
-            0.017578125,
-            0.0087890625,
-            0.00439453125,
-            0.002197265625
-        ],
-        // Values are x and y here instead of lat and long elsewhere.
-        bounds: new L.Bounds([
-            [-180, -90],
-            [180, 90]
-        ])
-    }
-    );
-    console.log('proj')
-
-    var map = L.map('map', {
-        center: [0, 0],
-        zoom: 2,
-        maxZoom: 8,
-        crs: EPSG4326,
-        maxBounds: [
-            [-120, -220],
-            [120, 220]
-        ]
-    });
-    console.log('hope?')
-
-    var template =
-        'https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/{layer}/default/{date}/{tileMatrixSet}/{z}/{y}/{x}.{image}';
-    // '//gibs-{s}.earthdata.nasa.gov/wmts/epsg4326/best/' +
-    // '{layer}/default/{time}/{tileMatrixSet}/{z}/{y}/{x}.jpg';
-
-    var layer = L.tileLayer(template, {
-        layer: 'GOES-East_ABI_Band13_Clean_Infrared',
-        tileMatrixSet: '2km',
-        // time: '2013-11-04',
-        tileSize: 512,
-        subdomains: 'abc',
-        noWrap: true,
-        date: '2019-09-01T17:00:00Z',
-        image: 'png',
-        continuousWorld: true,
-        // Prevent Leaflet from retrieving non-existent tiles on the
-        // borders.
-        bounds: [
-            [-89.9999, -179.9999],
-            [89.9999, 179.9999]
-        ],
-        attribution:
-            '<a href="https://wiki.earthdata.nasa.gov/display/GIBS">' +
-            'NASA EOSDIS GIBS</a>&nbsp;&nbsp;&nbsp;' +
-            '<a href="https://github.com/nasa-gibs/web-examples/blob/main/examples/leaflet/geographic-epsg4326.js">' +
-            'View Source' +
-            '</a>'
-    } as L.TileLayerOptions);
-    console.log('should be setting proj map')
-
-    map.addLayer(layer);
-};
