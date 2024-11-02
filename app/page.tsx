@@ -7,14 +7,15 @@ import { AutocompleteSearchComponent } from "@/components/autocomplete-search";
 import { DateSliderComponent } from "@/components/date-slider";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@radix-ui/react-label";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import EPSG4326Map from "@/components/EPSG4326Map";
 import GIBSTileLayer from "@/components/testGIBS";
 import { WMSTileLayer } from "react-leaflet";
+import { StormMarkers } from "@/components/StormMarkers";
 
-interface StormObservation {
+export interface StormObservation {
     date: string
     time: string
     latitude: number
@@ -23,7 +24,7 @@ interface StormObservation {
     pressure: number
 }
 
-interface StormData {
+export interface StormData {
     storm_id: string
     name: string
     num_records: number
@@ -33,12 +34,13 @@ interface StormData {
 export default function Home() {
     const mapContainer = useRef<HTMLDivElement>(null)
     const map = useRef<L.Map | null>(null)
-    const gibsLayerRef = useRef<L.TileLayer | null>(null)
     const markersRef = useRef<L.Layer[]>([])
     const [stormData, setStormData] = useState<StormData[]>([])
     const [error, setError] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
     const [selectedStormIds, setSelectedStormIds] = useState<string>('');
+    const [displayedStorm, setDisplayedStorm] = useState<StormData | null>(null)
+    const [displayedObservations, setDisplayedObservations] = useState<StormObservation[]>([]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -58,6 +60,16 @@ export default function Home() {
 
         fetchData()
     }, [])
+
+    useEffect(() => {
+        if (!selectedStormIds) return;
+
+        let storm = getStorm(selectedStormIds);
+        if (storm) {
+            let firstStorm = storm[0];
+            setDisplayedStorm(firstStorm);
+        }
+    }, [selectedStormIds])
 
     const createStormName = (data: StormData) => {
         return data.name + ' ' + data.storm_id
@@ -88,17 +100,22 @@ export default function Home() {
     }
 
     const onDateChange = (idx: number) => {
-        let filteredStorms = getStorm(selectedStormIds)[0]
+        // let filteredStorms = getStorm(selectedStormIds)[0]
 
-        if (filteredStorms) {
-            let newObs = filteredStorms.observations[idx]
-            // updateMapWhenDateChanges(newObs.date)
-            // let marker = plotObservation(selectedStormIds, newObs)
+        // if (filteredStorms) {
+        //     let newObs = filteredStorms.observations[idx]
+        //     // updateMapWhenDateChanges(newObs.date)
+        //     // let marker = plotObservation(selectedStormIds, newObs)
 
-            // fly to the first marker
-            if (idx === 0) {
-                map.current?.setView([newObs.latitude, newObs.longitude], map.current.getZoom())
-            }
+        //     // fly to the first marker
+        //     if (idx === 0) {
+        //         map.current?.setView([newObs.latitude, newObs.longitude], map.current.getZoom())
+        //     }
+        // }
+
+        // setDateIdx(idx);
+        if (displayedStorm && (idx) !== displayedObservations.length) {
+            setDisplayedObservations(displayedStorm.observations.slice(0, idx + 1));
         }
     }
 
@@ -118,7 +135,7 @@ export default function Home() {
                             <AutocompleteSearchComponent displayItems={stormData.map((d) => createStormName(d))} setSelectedItems={setSelectedStormIds} />
                         </div>
                     </div>
-                    <DateSliderComponent sliderDates={getDateTimeOfObservations()} onDateChange={onDateChange} />
+                    <DateSliderComponent sliderDates={displayedStorm?.observations.flatMap((s) => s.date + ' ' + s.time ) ?? []} onDateChange={onDateChange} />
                 </CardContent>
             </Card>
             <EPSG4326Map>
@@ -133,6 +150,9 @@ export default function Home() {
                 />
                 {/* GIBS Tile Layer */}
                 <GIBSTileLayer />
+                {displayedStorm &&
+                    <StormMarkers stormObservations={displayedObservations} stormId={displayedStorm.storm_id} stormName={displayedStorm.name} />
+                }
             </EPSG4326Map>
         </div>
     );

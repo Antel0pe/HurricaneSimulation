@@ -48,7 +48,7 @@ export function DateSliderComponent({ sliderDates, onDateChange }: DateSliderPro
         if (onDateChange) {
             onDateChange(currentIndex)
         }
-    }, [currentIndex, sliderDates, onDateChange])
+    }, [currentIndex, onDateChange])
 
     // Effect to reset currentIndex when sliderDates change
     React.useEffect(() => {
