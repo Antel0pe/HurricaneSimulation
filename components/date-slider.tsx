@@ -5,20 +5,32 @@ import { motion, AnimatePresence } from "framer-motion"
 import { ChevronLeft, ChevronRight, Play, Pause } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
+import { StormObservation } from "@/app/page"
 
 interface DateSliderProps {
-    sliderDates: string[]
-    onDateChange?: (idx: number) => void
+    observations: StormObservation[]
+    onDateChange?: (observations: StormObservation[]) => void 
 }
 
-export function DateSliderComponent({ sliderDates, onDateChange }: DateSliderProps) {
+export function DateSliderComponent({ observations, onDateChange }: DateSliderProps) {
     const [currentIndex, setCurrentIndex] = React.useState(0)
     const [isPlaying, setIsPlaying] = React.useState(false)
+    const [sliderDates, setSliderDates] = useState<string[]>([]);
 
     useEffect(() => {
-        console.log(sliderDates)
+        // console.log(sliderDates)
     }, [sliderDates])
+
+    useEffect(() => {
+        if (observations) {
+            setSliderDates(observations.map((o) => createDateTime(o)))
+        }
+    }, [observations])
+
+    const createDateTime = (obs: StormObservation) => {
+        return obs.date + ' ' + obs.time;
+    }
 
     const nextSlide = () => {
         setCurrentIndex((prevIndex) => (prevIndex + 1) % sliderDates.length)
@@ -46,16 +58,21 @@ export function DateSliderComponent({ sliderDates, onDateChange }: DateSliderPro
 
     React.useEffect(() => {
         if (onDateChange) {
-            onDateChange(currentIndex)
+            onDateChange(observations.slice(0, currentIndex + 1))
         }
-    }, [currentIndex, onDateChange])
+    }, [currentIndex])
 
     // Effect to reset currentIndex when sliderDates change
     React.useEffect(() => {
+        console.log(`slider dates changed ${sliderDates}`)
         setCurrentIndex(0)
         // Optionally, pause the slider when dates change
         setIsPlaying(false)
     }, [sliderDates])
+
+    useEffect(() => {
+        console.log('date change func changed')
+    }, [onDateChange])
 
     return (
         <div className="w-full max-w-md mx-auto p-6 space-y-6">

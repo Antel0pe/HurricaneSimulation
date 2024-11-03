@@ -7,7 +7,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import proj4 from 'proj4';
 import 'proj4leaflet';
-import GIBSTileLayer from './testGIBS';
+import GIBSTileLayer from './GIBS-TileLayer';
 
 type Props = {
     children?: React.ReactNode,

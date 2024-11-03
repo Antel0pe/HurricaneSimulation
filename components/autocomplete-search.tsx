@@ -1,6 +1,5 @@
 'use client'
 
-import * as React from 'react'
 import { Search } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
@@ -18,22 +17,37 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover'
+import { StormData } from '@/app/page'
+import React, { useState, useEffect, useCallback, Dispatch } from 'react'
 
 type Props = {
-    displayItems: string[],
-    setSelectedItems: React.Dispatch<React.SetStateAction<string>>
+    stormData: StormData[],
+    setSelectedItems: Dispatch<StormData>
 };
 
-export function AutocompleteSearchComponent({ displayItems, setSelectedItems }: Props) {
-    const [open, setOpen] = React.useState(false)
-    const [inputValue, setInputValue] = React.useState('')
+export function AutocompleteSearchComponent({ stormData, setSelectedItems }: Props) {
+    const [open, setOpen] = useState(false)
+    const [inputValue, setInputValue] = useState('')
+    const [stormNames, setStormNames] = useState<string[]>([]);
+
+    useEffect(() => {
+        setStormNames(stormData.map((s) => createStormName(s)))
+    }, [stormData])
+
+    const createStormName = (storm: StormData) => {
+        return storm.name + ' ' + storm.storm_id;
+    }
 
     const handleSelect = React.useCallback((currentValue: string) => {
-        setSelectedItems(currentValue)
+        setSelectedItems(findStormData(currentValue))
         setInputValue(currentValue)
         setOpen(false)
         console.log('selecting ' + currentValue)
     }, [setSelectedItems])
+
+    const findStormData = (stormName: string) => {
+        return stormData.filter((storm) => stormName.includes(createStormName(storm)))[0]
+    }
 
     return (
         <Popover open={open} onOpenChange={setOpen}>
@@ -62,7 +76,7 @@ export function AutocompleteSearchComponent({ displayItems, setSelectedItems }: 
                     <CommandList>
                         <CommandEmpty>No storm found.</CommandEmpty>
                         <CommandGroup>
-                            {displayItems
+                            {stormNames
                                 .filter((item) => item.toLowerCase().includes(inputValue.toLowerCase()))
                                 .map((item) => (
                                     <CommandItem
