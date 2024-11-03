@@ -38,16 +38,12 @@ export function AutocompleteSearchComponent({ stormData, setSelectedItems }: Pro
         return storm.name + ' ' + storm.storm_id;
     }
 
-    const handleSelect = React.useCallback((currentValue: string) => {
-        setSelectedItems(findStormData(currentValue))
+    const handleSelect = React.useCallback((currentValue: string, idx: number) => {
+        setSelectedItems(stormData[idx])
         setInputValue(currentValue)
         setOpen(false)
-        console.log('selecting ' + currentValue)
+        console.log('selecting ' + createStormName(stormData[idx]))
     }, [setSelectedItems])
-
-    const findStormData = (stormName: string) => {
-        return stormData.filter((storm) => stormName.includes(createStormName(storm)))[0]
-    }
 
     return (
         <Popover open={open} onOpenChange={setOpen}>
@@ -77,15 +73,17 @@ export function AutocompleteSearchComponent({ stormData, setSelectedItems }: Pro
                         <CommandEmpty>No storm found.</CommandEmpty>
                         <CommandGroup>
                             {stormNames
-                                .filter((item) => item.toLowerCase().includes(inputValue.toLowerCase()))
-                                .map((item) => (
+                                // .filter((item) => item.toLowerCase().includes(inputValue.toLowerCase()))
+                                .map((item, idx) => {
+                                    if (!item.toLowerCase().includes(inputValue.toLowerCase())) return
+                                    return (
                                     <CommandItem
-                                        key={item}
-                                        onSelect={() => handleSelect(item)}
+                                        key={idx}
+                                        onSelect={() => handleSelect(item, idx)}
                                     >
                                         {item}
                                     </CommandItem>
-                                ))}
+                                )})}
                         </CommandGroup>
                     </CommandList>
                 </Command>
