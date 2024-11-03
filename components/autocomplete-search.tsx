@@ -20,29 +20,26 @@ import {
 import { StormData } from '@/app/page'
 import React, { useState, useEffect, useCallback, Dispatch } from 'react'
 
-type Props = {
-    stormData: StormData[],
-    setSelectedItems: Dispatch<StormData>
+type Props<T> = {
+    data: T[],
+    displayText: (observations: T) => string
+    setSelectedItems: Dispatch<T>
 };
 
-export function AutocompleteSearchComponent({ stormData, setSelectedItems }: Props) {
+export function AutocompleteSearchComponent<T>({ data, displayText, setSelectedItems }: Props<T>) {
     const [open, setOpen] = useState(false)
     const [inputValue, setInputValue] = useState('')
-    const [stormNames, setStormNames] = useState<string[]>([]);
+    const [dataText, setDataText] = useState<string[]>([]);
 
     useEffect(() => {
-        setStormNames(stormData.map((s) => createStormName(s)))
-    }, [stormData])
-
-    const createStormName = (storm: StormData) => {
-        return storm.name + ' ' + storm.storm_id;
-    }
+        setDataText(data.map((s) => displayText(s)))
+    }, [data])
 
     const handleSelect = React.useCallback((currentValue: string, idx: number) => {
-        setSelectedItems(stormData[idx])
+        setSelectedItems(data[idx])
         setInputValue(currentValue)
         setOpen(false)
-        console.log('selecting ' + createStormName(stormData[idx]))
+        console.log('selecting ' + displayText(data[idx]))
     }, [setSelectedItems])
 
     return (
@@ -72,18 +69,19 @@ export function AutocompleteSearchComponent({ stormData, setSelectedItems }: Pro
                     <CommandList>
                         <CommandEmpty>No storm found.</CommandEmpty>
                         <CommandGroup>
-                            {stormNames
+                            {dataText
                                 // .filter((item) => item.toLowerCase().includes(inputValue.toLowerCase()))
                                 .map((item, idx) => {
                                     if (!item.toLowerCase().includes(inputValue.toLowerCase())) return
                                     return (
-                                    <CommandItem
-                                        key={idx}
-                                        onSelect={() => handleSelect(item, idx)}
-                                    >
-                                        {item}
-                                    </CommandItem>
-                                )})}
+                                        <CommandItem
+                                            key={idx}
+                                            onSelect={() => handleSelect(item, idx)}
+                                        >
+                                            {item}
+                                        </CommandItem>
+                                    )
+                                })}
                         </CommandGroup>
                     </CommandList>
                 </Command>

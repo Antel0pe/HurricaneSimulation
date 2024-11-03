@@ -11,7 +11,7 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import EPSG4326Map from "@/components/EPSG4326Map";
-import GIBSTileLayer from "@/components/GIBS-TileLayer";
+import GIBSTileLayer, { GIBS_TileLayerConfig } from "@/components/GIBS-TileLayer";
 import { WMSTileLayer } from "react-leaflet";
 import { StormMarkers } from "@/components/StormMarkers";
 
@@ -31,6 +31,25 @@ export interface StormData {
     observations: StormObservation[]
 }
 
+const GIBS_ConfigOptions: GIBS_TileLayerConfig[] = [
+    {
+        layer: 'MODIS_Combined_MAIAC_L2G_ColumnWaterVapor',
+        tileMatrixSet: '1km',
+        image: 'png',
+
+    },
+    {
+        layer: 'AMSRU2_Surface_Precipitation_Day',
+        tileMatrixSet: '2km',
+        image: 'png',
+    },
+    {
+        layer: 'MODIS_Aqua_Water_Vapor_5km_Day',
+        tileMatrixSet: '2km',
+        image: 'png',
+    }
+]
+
 export default function Home() {
     const mapContainer = useRef<HTMLDivElement>(null)
     const map = useRef<L.Map | null>(null)
@@ -40,6 +59,7 @@ export default function Home() {
     const [loading, setLoading] = useState(true)
     const [displayedStorm, setDisplayedStorm] = useState<StormData | null>(null)
     const [displayedObservations, setDisplayedObservations] = useState<StormObservation[]>([]);
+    const [selectedLayer, setSelectedLayer] = useState<GIBS_TileLayerConfig | null>();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -64,9 +84,17 @@ export default function Home() {
         if (displayedStorm) {
             setDisplayedObservations(observations);
             console.log(`displayed observartions ${observations}`)
-            console.log(`displayed observartions ${observations[displayedObservations.length-1]?.date} ${observations[displayedObservations.length-1]?.time}`)
+            console.log(`displayed observartions ${observations[observations.length - 1]?.date} ${observations[observations.length - 1]?.time}`)
         }
     }, [displayedStorm]);
+
+    const createStormName = (storm: StormData) => {
+        return storm.name + ' ' + storm.storm_id;
+    }
+
+    const createGIBSConfigDisplayText = (config: GIBS_TileLayerConfig) => {
+        return config.layer;
+    }
 
 
 
@@ -95,10 +123,17 @@ export default function Home() {
                         <div>
                             <Label htmlFor="search">Search by Storm Name</Label>
                             {/* items={stormData.map((s) => s.name + ' ' + s.storm_id)} */}
-                            <AutocompleteSearchComponent stormData={stormData} setSelectedItems={setDisplayedStorm} />
+                            <AutocompleteSearchComponent data={stormData} displayText={createStormName} setSelectedItems={setDisplayedStorm} />
                         </div>
                     </div>
                     <DateSliderComponent observations={displayedStorm?.observations ?? []} onDateChange={onDateChange} />
+
+                    <div className="space-y-4">
+                        <div>
+                            <Label htmlFor="search">Add layers</Label>
+                            <AutocompleteSearchComponent data={GIBS_ConfigOptions} displayText={createGIBSConfigDisplayText} setSelectedItems={setSelectedLayer} />
+                        </div>
+                    </div>
                 </CardContent>
             </Card>
             <EPSG4326Map>
@@ -112,7 +147,7 @@ export default function Home() {
                     noWrap={true}
                 />
                 {/* GIBS Tile Layer */}
-                <GIBSTileLayer date={displayedObservations[displayedObservations.length-1]?.date} time={displayedObservations[displayedObservations.length-1]?.time} />
+                <GIBSTileLayer date={displayedObservations[displayedObservations.length - 1]?.date} time={displayedObservations[displayedObservations.length - 1]?.time} config={selectedLayer ?? GIBS_ConfigOptions[0]}/>
                 {displayedStorm &&
                     <StormMarkers stormObservations={displayedObservations} stormId={displayedStorm.storm_id} stormName={displayedStorm.name} />
                 }

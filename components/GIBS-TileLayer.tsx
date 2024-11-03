@@ -7,46 +7,37 @@ import L from 'leaflet';
 interface Props {
     date?: string
     time?: string
+    config: GIBS_TileLayerConfig
 }
 
-const stuff = [
-    {
-        layer: 'MODIS_Combined_MAIAC_L2G_ColumnWaterVapor',
-        tileMatrixSet: '1km',
-        image: 'png',
+export interface GIBS_TileLayerConfig {
+    layer: string,
+    tileMatrixSet: string,
+    image: string,
+}
 
-    },
-    {
-        layer: 'AMSRU2_Surface_Precipitation_Day',
-        tilematrixset:'2km',
-        image: 'png',
-    },
-    {
-        layer: 'MODIS_Aqua_Water_Vapor_5km_Day',
-        tileMatrixSet: '2km',
-        image: 'png',
-    }
-]
-
-const GIBSTileLayer = ({ date = '2019-09-01', time='17:00 UTC' }: Props) => {
+const GIBSTileLayer = ({ date = '2019-09-01', time = '17:00 UTC', config }: Props) => {
     const map = useMap();
 
     useEffect(() => {
         console.log(`${date} @ ${time}`)
-    }, [date, time])
+        console.log(`${config.layer}`)
+    }, [date, time, config])
+
+
 
     useEffect(() => {
         const template =
             'https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/{layer}/default/{date}/{tileMatrixSet}/{z}/{y}/{x}.{image}';
 
         const layer = L.tileLayer(template, {
-            layer: 'MODIS_Aqua_Water_Vapor_5km_Day',
-            tileMatrixSet: '2km',
+            layer: config.layer,
+            tileMatrixSet: config.tileMatrixSet,
             tileSize: 512,
             subdomains: 'abc',
             noWrap: true,
             date: formatDateTime(date, time),
-            image: 'png',
+            image: config.image,
             continuousWorld: true,
             bounds: [
                 [-89.9999, -179.9999],
@@ -70,7 +61,7 @@ const GIBSTileLayer = ({ date = '2019-09-01', time='17:00 UTC' }: Props) => {
 
 
     const formatDateTime = (date: string, time: string) => {
-        return `${date}T${time.slice(0, 4+1)}:00Z`
+        return `${date}T${time.slice(0, 4 + 1)}:00Z`
     }
 
     return null;
