@@ -33,6 +33,11 @@ export interface StormData {
 
 const GIBS_ConfigOptions: GIBS_TileLayerConfig[] = [
     {
+        layer: 'VIIRS_SNPP_CorrectedReflectance_TrueColor',
+        tileMatrixSet: '250m',
+        image: 'jpeg',
+    },
+    {
         layer: 'MODIS_Combined_MAIAC_L2G_ColumnWaterVapor',
         tileMatrixSet: '1km',
         image: 'png',
@@ -47,7 +52,7 @@ const GIBS_ConfigOptions: GIBS_TileLayerConfig[] = [
         layer: 'MODIS_Aqua_Water_Vapor_5km_Day',
         tileMatrixSet: '2km',
         image: 'png',
-    }
+    },
 ]
 
 export default function Home() {
@@ -80,11 +85,9 @@ export default function Home() {
         fetchData()
     }, [])
 
-    const onDateChange = useCallback((observations: StormObservation[]) => {
+    const onDateChange = useCallback((idx: number) => {
         if (displayedStorm) {
-            setDisplayedObservations(observations);
-            console.log(`displayed observartions ${observations}`)
-            console.log(`displayed observartions ${observations[observations.length - 1]?.date} ${observations[observations.length - 1]?.time}`)
+            setDisplayedObservations(displayedStorm.observations.slice(0, idx + 1));
         }
     }, [displayedStorm]);
 
@@ -126,7 +129,7 @@ export default function Home() {
                             <AutocompleteSearchComponent data={stormData} displayText={createStormName} setSelectedItems={setDisplayedStorm} />
                         </div>
                     </div>
-                    <DateSliderComponent observations={displayedStorm?.observations ?? []} onDateChange={onDateChange} />
+
 
                     <div className="space-y-4">
                         <div>
@@ -136,7 +139,12 @@ export default function Home() {
                     </div>
                 </CardContent>
             </Card>
+
+
             <EPSG4326Map>
+                <div className="absolute bottom-0 left-0 z-[400]">
+                    <DateSliderComponent observations={displayedStorm?.observations ?? []} onDateChange={onDateChange} />
+                </div>
                 <WMSTileLayer
                     url="https://ows.terrestris.de/osm/service?"
                     layers="OSM-WMS"
@@ -147,7 +155,7 @@ export default function Home() {
                     noWrap={true}
                 />
                 {/* GIBS Tile Layer */}
-                <GIBSTileLayer date={displayedObservations[displayedObservations.length - 1]?.date} time={displayedObservations[displayedObservations.length - 1]?.time} config={selectedLayer ?? GIBS_ConfigOptions[0]}/>
+                <GIBSTileLayer date={displayedObservations[displayedObservations.length - 1]?.date} time={displayedObservations[displayedObservations.length - 1]?.time} config={selectedLayer ?? GIBS_ConfigOptions[0]} />
                 {displayedStorm &&
                     <StormMarkers stormObservations={displayedObservations} stormId={displayedStorm.storm_id} stormName={displayedStorm.name} />
                 }

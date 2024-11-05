@@ -10,7 +10,7 @@ import { StormObservation } from "@/app/page"
 
 interface DateSliderProps {
     observations: StormObservation[]
-    onDateChange?: (observations: StormObservation[]) => void 
+    onDateChange?: (idx: number) => void 
 }
 
 export function DateSliderComponent({ observations, onDateChange }: DateSliderProps) {
@@ -58,7 +58,7 @@ export function DateSliderComponent({ observations, onDateChange }: DateSliderPr
 
     React.useEffect(() => {
         if (onDateChange) {
-            onDateChange(observations.slice(0, currentIndex + 1))
+            onDateChange(currentIndex)
         }
     }, [currentIndex])
 
@@ -75,7 +75,7 @@ export function DateSliderComponent({ observations, onDateChange }: DateSliderPr
     }, [onDateChange])
 
     return (
-        <div className="w-full max-w-md mx-auto p-6 space-y-6">
+        <div className="w-full max-w-md mx-auto py-6 px-2 space-y-6">
             <div className="relative h-12 bg-muted rounded-lg overflow-hidden">
                 <AnimatePresence initial={false}>
                     <motion.div
@@ -103,6 +103,7 @@ export function DateSliderComponent({ observations, onDateChange }: DateSliderPr
                 </Button>
             </div>
 
+            {/* not a fan of this slider */}
             <Slider
                 value={[currentIndex]}
                 min={0}
