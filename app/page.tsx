@@ -142,7 +142,7 @@ export default function Home() {
 
 
             <EPSG4326Map>
-                <div className="absolute bottom-0 left-0 z-[400]">
+                <div className="absolute bottom-0 left-0 z-[400] bg-white">
                     <DateSliderComponent observations={displayedStorm?.observations ?? []} onDateChange={onDateChange} />
                 </div>
                 <WMSTileLayer
