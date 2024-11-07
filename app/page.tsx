@@ -14,6 +14,8 @@ import EPSG4326Map from "@/components/EPSG4326Map";
 import GIBSTileLayer, { GIBS_TileLayerConfig } from "@/components/GIBS-TileLayer";
 import { WMSTileLayer } from "react-leaflet";
 import { StormMarkers } from "@/components/StormMarkers";
+import { Switch } from "@/components/ui/switch";
+import { InfiniteDateSliderComponent } from "@/components/infinite-date-slider";
 
 export interface StormObservation {
     date: string
@@ -56,15 +58,15 @@ const GIBS_ConfigOptions: GIBS_TileLayerConfig[] = [
 ]
 
 export default function Home() {
-    const mapContainer = useRef<HTMLDivElement>(null)
-    const map = useRef<L.Map | null>(null)
-    const markersRef = useRef<L.Layer[]>([])
     const [stormData, setStormData] = useState<StormData[]>([])
     const [error, setError] = useState<string | null>(null)
     const [loading, setLoading] = useState(true)
     const [displayedStorm, setDisplayedStorm] = useState<StormData | null>(null)
     const [displayedObservations, setDisplayedObservations] = useState<StormObservation[]>([]);
     const [selectedLayer, setSelectedLayer] = useState<GIBS_TileLayerConfig | null>();
+    const [displayedDate, setDisplayedDate] = useState<string | null>(null);
+    const [displayedTime, setDisplayedTime] = useState<string | null>(null);
+    const [isInfiniteDateScrolling, setIsInfiniteDateScrolling] = useState<boolean>(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -88,8 +90,28 @@ export default function Home() {
     const onDateChange = useCallback((idx: number) => {
         if (displayedStorm) {
             setDisplayedObservations(displayedStorm.observations.slice(0, idx + 1));
+            setDisplayedDate(displayedStorm.observations[idx].date)
+            setDisplayedTime((displayedStorm.observations[idx].time))
         }
     }, [displayedStorm]);
+
+    const incrementInfiniteDate = useCallback((date: Date) => {
+        date.setDate(date.getDate() + 1)
+        return date;
+    }, []);
+
+    const decrementInfiniteDate = useCallback((date: Date) => {
+        date.setDate(date.getDate() - 1)
+        return date;
+    }, []);
+
+    const onInfiniteDateChange = useCallback((date: string, time: string) => {
+        if (date && time) {
+            setDisplayedDate(date)
+            setDisplayedTime(time)
+        }
+    }, []);
+
 
     const createStormName = (storm: StormData) => {
         return storm.name + ' ' + storm.storm_id;
@@ -115,6 +137,9 @@ export default function Home() {
         )
     }
 
+    
+
+
     return (
         <div className="h-screen flex">
             <Card className="w-1/4 p-4 overflow-y-auto">
@@ -137,13 +162,21 @@ export default function Home() {
                             <AutocompleteSearchComponent data={GIBS_ConfigOptions} displayText={createGIBSConfigDisplayText} setSelectedItems={setSelectedLayer} />
                         </div>
                     </div>
+                    <div>
+                        Infinite Date
+                        <Switch checked={isInfiniteDateScrolling} onCheckedChange={setIsInfiniteDateScrolling} />
+                    </div>
                 </CardContent>
             </Card>
 
 
             <EPSG4326Map>
                 <div className="absolute bottom-0 left-0 z-[400] bg-white">
-                    <DateSliderComponent observations={displayedStorm?.observations ?? []} onDateChange={onDateChange} />
+                    {isInfiniteDateScrolling ? 
+                        <InfiniteDateSliderComponent incrementDate={incrementInfiniteDate} decrementDate={decrementInfiniteDate} onDateChange={onInfiniteDateChange}/>
+                        :
+                        <DateSliderComponent observations={displayedStorm?.observations ?? []} onDateChange={onDateChange} />
+                    }
                 </div>
                 <WMSTileLayer
                     url="https://ows.terrestris.de/osm/service?"
@@ -155,7 +188,7 @@ export default function Home() {
                     noWrap={true}
                 />
                 {/* GIBS Tile Layer */}
-                <GIBSTileLayer date={displayedObservations[displayedObservations.length - 1]?.date} time={displayedObservations[displayedObservations.length - 1]?.time} config={selectedLayer ?? GIBS_ConfigOptions[0]} />
+                <GIBSTileLayer date={displayedDate ?? ''} time={displayedTime ?? ''} config={selectedLayer ?? GIBS_ConfigOptions[0]} />
                 {displayedStorm &&
                     <StormMarkers stormObservations={displayedObservations} stormId={displayedStorm.storm_id} stormName={displayedStorm.name} />
                 }
