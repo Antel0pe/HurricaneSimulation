@@ -64,8 +64,8 @@ export default function Home() {
     const [displayedStorm, setDisplayedStorm] = useState<StormData | null>(null)
     const [displayedObservations, setDisplayedObservations] = useState<StormObservation[]>([]);
     const [selectedLayer, setSelectedLayer] = useState<GIBS_TileLayerConfig | null>();
-    const [displayedDate, setDisplayedDate] = useState<string | null>(null);
-    const [displayedTime, setDisplayedTime] = useState<string | null>(null);
+    const [displayedDate, setDisplayedDate] = useState<string | undefined>();
+    const [displayedTime, setDisplayedTime] = useState<string | undefined>();
     const [isInfiniteDateScrolling, setIsInfiniteDateScrolling] = useState<boolean>(false);
 
     useEffect(() => {
@@ -89,6 +89,7 @@ export default function Home() {
 
     const onDateChange = useCallback((idx: number) => {
         if (displayedStorm) {
+            console.log(`displayed date ${displayedStorm.observations[idx].date}`)
             setDisplayedObservations(displayedStorm.observations.slice(0, idx + 1));
             setDisplayedDate(displayedStorm.observations[idx].date)
             setDisplayedTime((displayedStorm.observations[idx].time))
@@ -188,7 +189,7 @@ export default function Home() {
                     noWrap={true}
                 />
                 {/* GIBS Tile Layer */}
-                <GIBSTileLayer date={displayedDate ?? ''} time={displayedTime ?? ''} config={selectedLayer ?? GIBS_ConfigOptions[0]} />
+                <GIBSTileLayer date={displayedDate} time={displayedTime} config={selectedLayer ?? GIBS_ConfigOptions[0]} />
                 {displayedStorm &&
                     <StormMarkers stormObservations={displayedObservations} stormId={displayedStorm.storm_id} stormName={displayedStorm.name} />
                 }

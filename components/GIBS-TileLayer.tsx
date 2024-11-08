@@ -1,13 +1,13 @@
-// GIBSTileLayer.tsx
-
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
+import GIBSPreloadTileLayer from './GIBSPreloadTileLayer';
 
 interface Props {
     date?: string
     time?: string
     config: GIBS_TileLayerConfig
+    preloadDays?: number
 }
 
 export interface GIBS_TileLayerConfig {
@@ -16,53 +16,61 @@ export interface GIBS_TileLayerConfig {
     image: string,
 }
 
-const GIBSTileLayer = ({ date = '2019-09-01', time = '17:00 UTC', config }: Props) => {
+const GIBSTileLayer = ({ 
+    date = '2019-09-01', 
+    time = '17:00 UTC', 
+    config,
+    preloadDays = 10 
+}: Props) => {
     const map = useMap();
 
     useEffect(() => {
-        console.log(`${date} @ ${time}`)
-        console.log(`${config.layer}`)
-    }, [date, time, config])
-
-
-
-    useEffect(() => {
         const template =
-            'https://gibs.earthdata.nasa.gov/wmts/epsg4326/best/{layer}/default/{date}/{tileMatrixSet}/{z}/{y}/{x}.{image}';
+            'https://gibs-{s}.earthdata.nasa.gov/wmts/epsg4326/best/{layer}/default/{date}/{tileMatrixSet}/{z}/{y}/{x}.{image}';
 
-        const layer = L.tileLayer(template, {
+        const layerOptions = {
             layer: config.layer,
             tileMatrixSet: config.tileMatrixSet,
             tileSize: 512,
             subdomains: 'abc',
             noWrap: true,
-            date: formatDateTime(date, time),
+            date: `${date}T${time.slice(0, 4 + 1)}:00Z`,
+            time: time,
             image: config.image,
             continuousWorld: true,
             bounds: [
                 [-89.9999, -179.9999],
                 [89.9999, 179.9999],
             ],
-            attribution:
-                '<a href="https://wiki.earthdata.nasa.gov/display/GIBS">' +
-                'NASA EOSDIS GIBS</a>&nbsp;&nbsp;&nbsp;' +
-                '<a href="https://github.com/nasa-gibs/web-examples/blob/main/examples/leaflet/geographic-epsg4326.js">' +
-                'View Source' +
-                '</a>',
-        } as L.TileLayerOptions);
+            attribution: 'NASA EOSDIS GIBS | View Source',
+        } as L.TileLayerOptions;
 
+        const layer = new L.TileLayer(template, layerOptions);
         layer.addTo(map);
+
+        // const layer = new GIBSPreloadTileLayer(template, layerOptions);
+        // layer.addTo(map);
+
+        // Initial preload
+        // layer.preloadTiles(preloadDays);
+
+        // // Preload on map movements
+        // const handleMapChange = () => {
+        //     layer.preloadTiles(preloadDays);
+        // };
+
+        // map.on('moveend', handleMapChange);
+        // map.on('zoomend', handleMapChange);
+
+        // // Update date and clean cache when date changes
+        // layer.updateDate(date, time);
 
         return () => {
             map.removeLayer(layer);
+            // map.off('moveend', handleMapChange);
+            // map.off('zoomend', handleMapChange);
         };
-    }, [map, date, time]);
-
-
-
-    const formatDateTime = (date: string, time: string) => {
-        return `${date}T${time.slice(0, 4 + 1)}:00Z`
-    }
+    }, [map, date, time, config, preloadDays]);
 
     return null;
 };
