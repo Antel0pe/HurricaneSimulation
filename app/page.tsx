@@ -89,7 +89,7 @@ export default function Home() {
 
     const onDateChange = useCallback((idx: number) => {
         if (displayedStorm) {
-            console.log(`displayed date ${displayedStorm.observations[idx].date}`)
+            // console.log(`displayed date ${displayedStorm.observations[idx].date}`)
             setDisplayedObservations(displayedStorm.observations.slice(0, idx + 1));
             setDisplayedDate(displayedStorm.observations[idx].date)
             setDisplayedTime((displayedStorm.observations[idx].time))

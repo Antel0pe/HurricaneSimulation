@@ -55,7 +55,7 @@ export function DateSliderComponent({ observations, onDateChange }: DateSliderPr
 
     // Effect to reset currentIndex when sliderDates change
     React.useEffect(() => {
-        console.log(`slider dates changed ${sliderDates}`)
+        // console.log(`slider dates changed ${sliderDates}`)
         setCurrentIndex(0)
         // Optionally, pause the slider when dates change
         setIsPlaying(false)
