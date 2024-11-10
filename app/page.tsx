@@ -16,6 +16,7 @@ import { WMSTileLayer } from "react-leaflet";
 import { StormMarkers } from "@/components/StormMarkers";
 import { Switch } from "@/components/ui/switch";
 import { InfiniteDateSliderComponent } from "@/components/infinite-date-slider";
+import GibsMap from "@/components/GIBSMap";
 
 export interface StormObservation {
     date: string
@@ -143,6 +144,9 @@ export default function Home() {
 
     return (
         <div className="h-screen flex">
+            <script src="GIBSMetadata.js"></script>
+            <script src="GIBSLayer.js"></script>
+            
             <Card className="w-1/4 p-4 overflow-y-auto">
                 <CardHeader>
                     <CardTitle>Storm Data Filters</CardTitle>
@@ -171,29 +175,8 @@ export default function Home() {
             </Card>
 
 
-            <EPSG4326Map>
-                <div className="absolute bottom-0 left-0 z-[400] bg-white">
-                    {isInfiniteDateScrolling ? 
-                        <InfiniteDateSliderComponent incrementDate={incrementInfiniteDate} decrementDate={decrementInfiniteDate} onDateChange={onInfiniteDateChange}/>
-                        :
-                        <DateSliderComponent observations={displayedStorm?.observations ?? []} onDateChange={onDateChange} />
-                    }
-                </div>
-                <WMSTileLayer
-                    url="https://ows.terrestris.de/osm/service?"
-                    layers="OSM-WMS"
-                    format="image/png"
-                    transparent={false}
-                    attribution="&copy; OpenStreetMap contributors"
-                    // continuousWorld={true}
-                    noWrap={true}
-                />
-                {/* GIBS Tile Layer */}
-                <GIBSTileLayer date={displayedDate} time={displayedTime} config={selectedLayer ?? GIBS_ConfigOptions[0]} />
-                {displayedStorm &&
-                    <StormMarkers stormObservations={displayedObservations} stormId={displayedStorm.storm_id} stormName={displayedStorm.name} />
-                }
-            </EPSG4326Map>
+            <GibsMap />
+
         </div>
     );
 }

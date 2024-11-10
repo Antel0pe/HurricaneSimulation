@@ -45,8 +45,14 @@ const GIBSTileLayer = ({
             attribution: 'NASA EOSDIS GIBS | View Source',
         } as L.TileLayerOptions;
 
-        const layer = new L.TileLayer(template, layerOptions);
-        layer.addTo(map);
+        // const layer = new L.TileLayer(template, layerOptions);
+        // layer.addTo(map);
+        
+        // @ts-ignore
+        const layer = new L.GIBSLayer('MODIS_Aqua_SurfaceReflectance_Bands721', {
+            date: new Date('2015/04/01'),
+            transparent: true
+        }).addTo(map);
 
         // const layer = new GIBSPreloadTileLayer(template, layerOptions);
         // layer.addTo(map);

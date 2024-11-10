@@ -11,9 +11,9 @@ import GIBSTileLayer from './GIBS-TileLayer';
 
 type Props = {
     children?: React.ReactNode,
-  }
+}
 
-const EPSG4326Map = ( { children }: Props) => {
+const EPSG4326Map = ({ children }: Props) => {
     // Define the custom CRS using proj4leaflet
     const EPSG4326 = new L.Proj.CRS(
         'EPSG:4326',
@@ -36,17 +36,19 @@ const EPSG4326Map = ( { children }: Props) => {
     );
 
     return (
-        <MapContainer
-            center={[0, 0]}
-            zoom={2}
-            maxZoom={8}
-            crs={EPSG4326}
+        <div>
+            <MapContainer
+                center={[0, 0]}
+                zoom={2}
+                maxZoom={8}
+                crs={EPSG4326}
 
-            style={{ height: '100vh', width: '100%' }}
-        >
-            
-            { children }
-        </MapContainer>
+                style={{ height: '100vh', width: '100%' }}
+            >
+
+                {children}
+            </MapContainer>
+        </div>
     );
 };
 
