@@ -1,7 +1,10 @@
+'use client';
+
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { Analytics } from '@vercel/analytics/react';
+import { useEffect } from "react";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -14,16 +17,26 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-export const metadata: Metadata = {
-  title: "HurDatz",
-  description: "Generate high fantasy novels",
-};
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+    useEffect(() => {
+        if ('serviceWorker' in navigator) {
+            // window.addEventListener('load', () => {
+                console.log('HELLO33')
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then((registration) => {
+                        console.log('Service Worker registered with scope:', registration.scope);
+                    })
+                    .catch((error) => {
+                        console.error('Service Worker registration failed:', error);
+                    });
+            // });
+        }
+    }, []);
   return (
     <html lang="en">
       <body

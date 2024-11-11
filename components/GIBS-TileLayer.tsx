@@ -1,7 +1,8 @@
 import { useEffect, useCallback } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
-import GIBSPreloadTileLayer from './GIBSPreloadTileLayer';
+import MyTileLayer from './MyTileLayer';
+import { format } from 'path';
 
 interface Props {
     date?: string
@@ -38,6 +39,7 @@ const GIBSTileLayer = ({
             time: time,
             image: config.image,
             continuousWorld: true,
+            keepBuffer: 5,
             bounds: [
                 [-89.9999, -179.9999],
                 [89.9999, 179.9999],
@@ -48,14 +50,21 @@ const GIBSTileLayer = ({
         // const layer = new L.TileLayer(template, layerOptions);
         // layer.addTo(map);
         
-        // @ts-ignore
-        const layer = new L.GIBSLayer('MODIS_Aqua_SurfaceReflectance_Bands721', {
-            date: new Date('2015/04/01'),
-            transparent: true
-        }).addTo(map);
+        const layer = new MyTileLayer(template, layerOptions);
+        layer.addTo(map);
 
-        // const layer = new GIBSPreloadTileLayer(template, layerOptions);
-        // layer.addTo(map);
+        console.log(`current date ${date}`)
+
+        const futurePreloadedDates = [];
+        for (let i = 1; i <= 3; i++) {
+            const utcDate = new Date(date);
+            utcDate.setUTCDate(utcDate.getUTCDate() + i);
+            futurePreloadedDates.push(formatDate(utcDate))
+        }
+
+        console.log(`will ask for preload of ${futurePreloadedDates}`)
+
+        layer.preloadTilesForFutureDates(map, template, config.layer, config.tileMatrixSet, 'abc', config.image, futurePreloadedDates, 5);
 
         // Initial preload
         // layer.preloadTiles(preloadDays);
@@ -80,5 +89,12 @@ const GIBSTileLayer = ({
 
     return null;
 };
+
+function formatDate(date: Date): string {
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0'); // Months are 0-based
+    const day = String(date.getUTCDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
 
 export default GIBSTileLayer;

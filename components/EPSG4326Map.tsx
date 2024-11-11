@@ -36,19 +36,17 @@ const EPSG4326Map = ({ children }: Props) => {
     );
 
     return (
-        <div>
-            <MapContainer
-                center={[0, 0]}
-                zoom={2}
-                maxZoom={8}
-                crs={EPSG4326}
+        <MapContainer
+            center={[0, 0]}
+            zoom={2}
+            maxZoom={8}
+            crs={EPSG4326}
 
-                style={{ height: '100vh', width: '100%' }}
-            >
+            style={{ height: '100vh', width: '100%' }}
+        >
 
-                {children}
-            </MapContainer>
-        </div>
+            {children}
+        </MapContainer>
     );
 };
 
