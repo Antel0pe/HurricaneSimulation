@@ -149,7 +149,6 @@ class MyTileLayer extends L.TileLayer {
 
         // Send tile URLs to the Service Worker for caching
         if (navigator.serviceWorker && navigator.serviceWorker.controller) {
-            console.log(`using service worker? ${tileUrlsToPreload}`)
             navigator.serviceWorker.controller.postMessage({
                 type: 'PRELOAD_TILES',
                 tileUrls: tileUrlsToPreload,

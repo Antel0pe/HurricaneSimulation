@@ -11,15 +11,15 @@ interface StormMarkersProps {
 export function StormMarkers({ stormObservations, stormId, stormName }: StormMarkersProps) {
     const map = useMap()
 
-    useEffect(() => {
-        if (stormObservations.length === 0) return
+    // useEffect(() => {
+    //     if (stormObservations.length === 0) return
 
-        // Fly to the first observation
-        const firstObservation = stormObservations[0];
-        if (firstObservation) {
-            map.setView([firstObservation.latitude, firstObservation.longitude], map.getZoom())
-        }
-    }, [stormObservations, stormId, map, stormName])
+    //     // Fly to the first observation
+    //     const firstObservation = stormObservations[0];
+    //     if (firstObservation) {
+    //         map.setView([firstObservation.latitude, firstObservation.longitude], map.getZoom())
+    //     }
+    // }, [stormObservations, stormId, map, stormName])
 
     const getColorForWindSpeed = (windSpeed: number): string => {
         if (windSpeed < 64) return '#00ff00' // Tropical Storm

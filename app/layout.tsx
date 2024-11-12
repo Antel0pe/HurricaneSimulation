@@ -26,7 +26,6 @@ export default function RootLayout({
     useEffect(() => {
         if ('serviceWorker' in navigator) {
             // window.addEventListener('load', () => {
-                console.log('HELLO33')
                 navigator.serviceWorker.register('/service-worker.js')
                     .then((registration) => {
                         console.log('Service Worker registered with scope:', registration.scope);

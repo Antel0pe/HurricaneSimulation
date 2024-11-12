@@ -53,16 +53,12 @@ const GIBSTileLayer = ({
         const layer = new MyTileLayer(template, layerOptions);
         layer.addTo(map);
 
-        console.log(`current date ${date}`)
-
         const futurePreloadedDates = [];
         for (let i = 1; i <= 3; i++) {
             const utcDate = new Date(date);
             utcDate.setUTCDate(utcDate.getUTCDate() + i);
             futurePreloadedDates.push(formatDate(utcDate))
         }
-
-        console.log(`will ask for preload of ${futurePreloadedDates}`)
 
         layer.preloadTilesForFutureDates(map, template, config.layer, config.tileMatrixSet, 'abc', config.image, futurePreloadedDates, 5);
 

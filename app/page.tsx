@@ -12,11 +12,12 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import EPSG4326Map from "@/components/EPSG4326Map";
 import GIBSTileLayer, { GIBS_TileLayerConfig } from "@/components/GIBS-TileLayer";
-import { WMSTileLayer } from "react-leaflet";
+import { TileLayer, WMSTileLayer } from "react-leaflet";
 import { StormMarkers } from "@/components/StormMarkers";
 import { Switch } from "@/components/ui/switch";
 import { InfiniteDateSliderComponent } from "@/components/infinite-date-slider";
 import GibsMap from "@/components/GIBSMap";
+import { PlayHurricaneMarkers } from "@/components/playHurricaneMarkers";
 
 export interface StormObservation {
     date: string
@@ -67,9 +68,9 @@ export default function Home() {
     const [selectedLayer, setSelectedLayer] = useState<GIBS_TileLayerConfig | null>();
     const [displayedDate, setDisplayedDate] = useState<string | undefined>();
     const [displayedTime, setDisplayedTime] = useState<string | undefined>();
-    const [isInfiniteDateScrolling, setIsInfiniteDateScrolling] = useState<boolean>(false);
+    const [isInfiniteDateScrolling, setIsInfiniteDateScrolling] = useState<boolean>(true);
 
-    
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -141,7 +142,7 @@ export default function Home() {
         )
     }
 
-    
+
 
 
     return (
@@ -175,8 +176,8 @@ export default function Home() {
 
             <EPSG4326Map>
                 <div className="absolute bottom-0 left-0 z-[400] bg-white">
-                    {isInfiniteDateScrolling ? 
-                        <InfiniteDateSliderComponent incrementDate={incrementInfiniteDate} decrementDate={decrementInfiniteDate} onDateChange={onInfiniteDateChange}/>
+                    {isInfiniteDateScrolling ?
+                        <InfiniteDateSliderComponent incrementDate={incrementInfiniteDate} decrementDate={decrementInfiniteDate} onDateChange={onInfiniteDateChange} />
                         :
                         <DateSliderComponent observations={displayedStorm?.observations ?? []} onDateChange={onDateChange} />
                     }
@@ -192,8 +193,11 @@ export default function Home() {
                 />
                 {/* GIBS Tile Layer */}
                 <GIBSTileLayer date={displayedDate} time={displayedTime} config={selectedLayer ?? GIBS_ConfigOptions[0]} />
-                {displayedStorm &&
+                {/* {displayedStorm &&
                     <StormMarkers stormObservations={displayedObservations} stormId={displayedStorm.storm_id} stormName={displayedStorm.name} />
+                } */}
+                {displayedDate && displayedTime &&
+                    <PlayHurricaneMarkers stormData={stormData} displayedDate={displayedDate} displayedTime={displayedTime} />
                 }
             </EPSG4326Map>
 
