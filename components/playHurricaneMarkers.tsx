@@ -16,7 +16,6 @@ export function PlayHurricaneMarkers({ stormData, displayedDate, displayedTime }
 
     useEffect(() => {
         setCurrentlyOccurringHurricanes(getActiveHurricanes(stormData, displayedDate, displayedTime))
-        console.log(getActiveHurricanes(stormData, displayedDate, displayedTime))
     }, [stormData, displayedDate, displayedTime])
 
     function getActiveHurricanes(

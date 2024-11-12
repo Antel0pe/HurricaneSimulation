@@ -74,7 +74,7 @@ export function InfiniteDateSliderComponent({ startDate, incrementDate, decremen
                             <Calendar className="h-4 w-4" />
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="end">
+                    <PopoverContent className="w-auto p-0 z-[999]" align="end">
                         <CalendarComponent
                             mode="single"
                             selected={currentDate}
