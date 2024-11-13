@@ -16,7 +16,10 @@ export function StormMarkers({ stormData, currentDisplayedDate, stormId, stormNa
         setCurrentDate(new Date(currentDisplayedDate))
     }, [currentDisplayedDate])
 
-    const map = useMap()
+    // useEffect(() => {
+    //     console.log(stormData)
+    // }, [stormData])
+
 
     // useEffect(() => {
     //     if (stormObservations.length === 0) return
@@ -44,8 +47,12 @@ export function StormMarkers({ stormData, currentDisplayedDate, stormId, stormNa
                     const obsTime = new Date(`${obs.date}T${obs.time.replace(' UTC', '')}Z`);
                     return obsTime <= currentDate;
                 })
-                    // .filter((_, idx) => idx === selectedDateIndex) // Only show observations for the selected date
-                    .map((obs, idx) => (
+                // .filter((_, idx) => idx === selectedDateIndex) // Only show observations for the selected date
+                .map((obs) => {
+                    // console.log(obs);
+                    return obs
+                })
+                .map((obs, idx) => (
                         <CircleMarker
                             key={`${stormId}-${idx}`}
                             center={[obs.latitude, obs.longitude]}
@@ -65,7 +72,7 @@ export function StormMarkers({ stormData, currentDisplayedDate, stormId, stormNa
                                 <p>Wind Speed: {obs.wind_speed} knots</p>
                                 <p>Pressure: {obs.pressure === -999 ? 'N/A' : obs.pressure + ' mb'}</p>
                             </Popup>
-                        </CircleMarker>
+                        </CircleMarker> 
                     )
             )}
         </>

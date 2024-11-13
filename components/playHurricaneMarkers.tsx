@@ -59,24 +59,24 @@ export function PlayHurricaneMarkers({ stormData, displayedDate, displayedTime }
                 // Check if currentTime is within the storm's active period
                 return currentTime >= firstTime && currentTime <= lastTime;
             })
-            .map((storm): StormData => {
-                // Filter observations up to currentTime
-                const relevantObservations = storm.observations
-                    .filter((obs): boolean => {
-                        const obsTime = new Date(`${obs.date}T${obs.time.replace(' UTC', '')}Z`);
-                        return obsTime <= currentTime;
-                    })
-                    .sort((a, b) => {
-                        const dateA = new Date(`${a.date}T${a.time.replace(' UTC', '')}Z`).getTime();
-                        const dateB = new Date(`${b.date}T${b.time.replace(' UTC', '')}Z`).getTime();
-                        return dateA - dateB;
-                    });
+            // .map((storm): StormData => {
+            //     // Filter observations up to currentTime
+            //     const relevantObservations = storm.observations
+            //         .filter((obs): boolean => {
+            //             const obsTime = new Date(`${obs.date}T${obs.time.replace(' UTC', '')}Z`);
+            //             return obsTime <= currentTime;
+            //         })
+            //         .sort((a, b) => {
+            //             const dateA = new Date(`${a.date}T${a.time.replace(' UTC', '')}Z`).getTime();
+            //             const dateB = new Date(`${b.date}T${b.time.replace(' UTC', '')}Z`).getTime();
+            //             return dateA - dateB;
+            //         });
 
-                return {
-                    ...storm,
-                    observations: relevantObservations,
-                };
-            });
+            //     return {
+            //         ...storm,
+            //         observations: relevantObservations,
+            //     };
+            // });
     }
 
     return (

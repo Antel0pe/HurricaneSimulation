@@ -209,8 +209,8 @@ export default function Home() {
                         <PlayHurricaneMarkers stormData={stormData} displayedDate={displayedDate} displayedTime={displayedTime} />
                     )
                     :
-                    (displayedStorm &&
-                        <StormMarkers stormData={displayedObservations} stormId={displayedStorm.storm_id} stormName={displayedStorm.name} />
+                    (displayedStorm && displayedDate && 
+                        <StormMarkers stormData={displayedStorm.observations} currentDisplayedDate={displayedDate} stormId={displayedStorm.storm_id} stormName={displayedStorm.name} />
                     )
                 }
             </EPSG4326Map>
