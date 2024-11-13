@@ -66,9 +66,9 @@ export default function Home() {
     const [displayedStorm, setDisplayedStorm] = useState<StormData | null>(null)
     const [displayedObservations, setDisplayedObservations] = useState<StormObservation[]>([]);
     const [selectedLayer, setSelectedLayer] = useState<GIBS_TileLayerConfig | null>();
-    const [displayedDate, setDisplayedDate] = useState<string | undefined>();
-    const [displayedTime, setDisplayedTime] = useState<string | undefined>();
-    const [isInfiniteDateScrolling, setIsInfiniteDateScrolling] = useState<boolean>(true);
+    const [displayedDate, setDisplayedDate] = useState<string>('2019-09-01');
+    const [displayedTime, setDisplayedTime] = useState<string>('00:00');
+    const [showAllHurricanes, setShowAllHurricanes] = useState<boolean>(true);
 
 
 
@@ -90,6 +90,13 @@ export default function Home() {
 
         fetchData()
     }, [])
+
+    useEffect(() => {
+        if (!displayedStorm) return
+        
+        setDisplayedDate(displayedStorm.observations[0].date)
+        setDisplayedTime(displayedStorm.observations[0].time.slice(0, 4+1))
+    }, [displayedStorm])
 
     const onDateChange = useCallback((idx: number) => {
         if (displayedStorm) {
@@ -168,19 +175,20 @@ export default function Home() {
                         </div>
                     </div>
                     <div>
-                        Infinite Date
-                        <Switch checked={isInfiniteDateScrolling} onCheckedChange={setIsInfiniteDateScrolling} />
+                        Show All Hurricanes
+                        <Switch checked={showAllHurricanes} onCheckedChange={setShowAllHurricanes} />
                     </div>
                 </CardContent>
             </Card>
 
             <EPSG4326Map>
                 <div className="absolute bottom-0 left-0 z-[400] bg-white">
-                    {isInfiniteDateScrolling ?
+                    <InfiniteDateSliderComponent startDate={displayedDate} incrementDate={incrementInfiniteDate} decrementDate={decrementInfiniteDate} onDateChange={onInfiniteDateChange} />
+                    {/* {isInfiniteDateScrolling ?
                         <InfiniteDateSliderComponent incrementDate={incrementInfiniteDate} decrementDate={decrementInfiniteDate} onDateChange={onInfiniteDateChange} />
                         :
                         <DateSliderComponent observations={displayedStorm?.observations ?? []} onDateChange={onDateChange} />
-                    }
+                    } */}
                 </div>
                 <WMSTileLayer
                     url="https://ows.terrestris.de/osm/service?"
@@ -196,8 +204,14 @@ export default function Home() {
                 {/* {displayedStorm &&
                     <StormMarkers stormObservations={displayedObservations} stormId={displayedStorm.storm_id} stormName={displayedStorm.name} />
                 } */}
-                {displayedDate && displayedTime &&
-                    <PlayHurricaneMarkers stormData={stormData} displayedDate={displayedDate} displayedTime={displayedTime} />
+                {showAllHurricanes ? 
+                    (displayedDate && displayedTime && 
+                        <PlayHurricaneMarkers stormData={stormData} displayedDate={displayedDate} displayedTime={displayedTime} />
+                    )
+                    :
+                    (displayedStorm &&
+                        <StormMarkers stormData={displayedObservations} stormId={displayedStorm.storm_id} stormName={displayedStorm.name} />
+                    )
                 }
             </EPSG4326Map>
 

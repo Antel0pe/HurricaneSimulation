@@ -1,14 +1,21 @@
 import { StormData, StormObservation } from "@/app/page"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap, LayersControl } from 'react-leaflet'
 
 interface StormMarkersProps {
-    stormObservations: StormObservation[]
+    stormData: StormObservation[]
+    currentDisplayedDate: string
     stormId: string
     stormName: string
 }
 
-export function StormMarkers({ stormObservations, stormId, stormName }: StormMarkersProps) {
+export function StormMarkers({ stormData, currentDisplayedDate, stormId, stormName }: StormMarkersProps) {
+    const [currentDate, setCurrentDate] = useState<Date>(new Date('2019-01-01'))
+
+    useEffect(() => {
+        setCurrentDate(new Date(currentDisplayedDate))
+    }, [currentDisplayedDate])
+
     const map = useMap()
 
     // useEffect(() => {
@@ -32,7 +39,11 @@ export function StormMarkers({ stormObservations, stormId, stormName }: StormMar
 
     return (
         <>
-            {stormObservations
+            {stormData
+                .filter((obs): boolean => {
+                    const obsTime = new Date(`${obs.date}T${obs.time.replace(' UTC', '')}Z`);
+                    return obsTime <= currentDate;
+                })
                     // .filter((_, idx) => idx === selectedDateIndex) // Only show observations for the selected date
                     .map((obs, idx) => (
                         <CircleMarker

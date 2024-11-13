@@ -83,7 +83,7 @@ export function PlayHurricaneMarkers({ stormData, displayedDate, displayedTime }
         <div>
             {currentlyOccurringHurricanes.map((storm, idx) => {
                 return (
-                    <StormMarkers key={storm.name + storm.storm_id} stormObservations={storm.observations} stormId={storm.storm_id} stormName={storm.name} />
+                    <StormMarkers key={storm.name + storm.storm_id} currentDisplayedDate={displayedDate} stormData={storm.observations} stormId={storm.storm_id} stormName={storm.name} />
                 )
             })}
         </div>

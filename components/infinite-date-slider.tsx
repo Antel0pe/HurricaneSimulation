@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useEffect, useState } from "react"
 
 interface DateSliderProps {
-    startDate?: Date
+    startDate?: string
     incrementDate: (date: Date) => Date
     decrementDate: (date: Date) => Date
     onDateChange: (date: string, time: string) => void
@@ -21,7 +21,7 @@ export function InfiniteDateSliderComponent({ startDate, incrementDate, decremen
 
     useEffect(() => {
         if (startDate) {
-            setCurrentDate(startDate)
+            setCurrentDate(new Date(startDate))
         }
     }, [startDate])
 
@@ -61,7 +61,7 @@ export function InfiniteDateSliderComponent({ startDate, incrementDate, decremen
     }, [currentDate.toISOString()])
 
     React.useEffect(() => {
-        setIsPlaying(false)
+        // setIsPlaying(false)
     }, [startDate])
 
     return (
