@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useCallback } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';

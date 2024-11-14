@@ -1,6 +1,8 @@
-import { StormData, StormObservation } from "@/app/page"
+'use client'
+
 import { useEffect, useState } from "react"
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap, LayersControl } from 'react-leaflet'
+import { StormObservation } from "./map-wrapper"
 
 interface StormMarkersProps {
     stormData: StormObservation[]

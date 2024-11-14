@@ -17,7 +17,6 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from '@/components/ui/popover'
-import { StormData } from '@/app/page'
 import React, { useState, useEffect, useCallback, Dispatch } from 'react'
 
 type Props<T> = {

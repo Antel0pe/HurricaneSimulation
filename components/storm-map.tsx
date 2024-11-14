@@ -292,10 +292,10 @@ export function StormMapComponent() {
                         <div>
                             <Label htmlFor="search">Search by Storm Name</Label>
                             {/* items={stormData.map((s) => s.name + ' ' + s.storm_id)} */}
-                            <AutocompleteSearchComponent data={stormData.map((d) => createStormName(d))} setSelectedItems={setSelectedStormIds} />
+                            {/* <AutocompleteSearchComponent data={stormData.map((d) => createStormName(d))} setSelectedItems={setSelectedStormIds} /> */}
                         </div>
                     </div>
-                    <DateSliderComponent sliderDates={getUniqueDatesOfStorm()} onDateChange={onDateChange} />
+                    {/* <DateSliderComponent sliderDates={getUniqueDatesOfStorm()} onDateChange={onDateChange} /> */}
                 </CardContent>
             </Card>
             <div ref={mapContainer} id='map' className="w-3/4" />

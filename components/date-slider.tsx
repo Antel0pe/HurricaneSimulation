@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, Play, Pause } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { useEffect, useState } from "react"
-import { StormObservation } from "@/app/page"
+import { StormObservation } from "./map-wrapper"
 interface DateSliderProps {
     observations: StormObservation[]
     onDateChange?: (idx: number) => void

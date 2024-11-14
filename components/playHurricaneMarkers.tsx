@@ -1,6 +1,6 @@
 "use client"
 
-import { StormData } from "@/app/page"
+import { StormData } from "./map-wrapper"
 import { StormMarkers } from "./StormMarkers"
 import { useEffect, useState } from "react"
 
