@@ -1,6 +1,6 @@
 # HurricaneSimulation
 
-Simple simulation modelling factors explained here: https://www.youtube.com/watch?v=wPDoIrGUrEc&ab_channel=NOAASciJinks
+Visit at: hurricane-visualization.vercel.app
 
 ## Getting Started
 
@@ -8,12 +8,9 @@ First, run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
+
+## Note for self
+processed.zip not in repo since it exceeds the Git File storage limit
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
