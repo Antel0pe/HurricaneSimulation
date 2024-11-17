@@ -14,6 +14,7 @@ import { useState, useEffect, useCallback } from "react";
 import { AutocompleteSearchComponent } from "./autocomplete-search";
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
+import HeatmapLayer from "./heatmap-layer";
 
 const Map = dynamic(() => import("./EPSG4326Map"), { ssr: false });
 
@@ -96,14 +97,14 @@ const MapWrapper = ({ children }: EPSG4326Map_Props) => {
         setDisplayedTime(displayedStorm.observations[0].time.slice(0, 4+1))
     }, [displayedStorm])
 
-    const onDateChange = useCallback((idx: number) => {
-        if (displayedStorm) {
-            // console.log(`displayed date ${displayedStorm.observations[idx].date}`)
-            setDisplayedObservations(displayedStorm.observations.slice(0, idx + 1));
-            setDisplayedDate(displayedStorm.observations[idx].date)
-            setDisplayedTime((displayedStorm.observations[idx].time))
-        }
-    }, [displayedStorm]);
+    // const onDateChange = useCallback((idx: number) => {
+    //     if (displayedStorm) {
+    //         // console.log(`displayed date ${displayedStorm.observations[idx].date}`)
+    //         setDisplayedObservations(displayedStorm.observations.slice(0, idx + 1));
+    //         setDisplayedDate(displayedStorm.observations[idx].date)
+    //         setDisplayedTime((displayedStorm.observations[idx].time))
+    //     }
+    // }, [displayedStorm]);
 
     const incrementInfiniteDate = useCallback((date: Date) => {
         date.setDate(date.getDate() + 1)
@@ -144,9 +145,6 @@ const MapWrapper = ({ children }: EPSG4326Map_Props) => {
             </Alert>
         )
     }
-
-
-
 
     return (
         <div className="h-screen flex">
@@ -202,6 +200,8 @@ const MapWrapper = ({ children }: EPSG4326Map_Props) => {
                         <StormMarkers stormData={displayedStorm.observations} currentDisplayedDate={displayedDate} stormId={displayedStorm.storm_id} stormName={displayedStorm.name} />
                     )
                 }
+
+                <HeatmapLayer />
             </Map>
 
         </div>
