@@ -1,8 +1,10 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # repo specific
+/processed-2020-temp/*
 /processed-2020-temp/processed/*
 /processed-2020-temp/processed.zip
+/public/local_data/*
 
 # dependencies
 /node_modules
