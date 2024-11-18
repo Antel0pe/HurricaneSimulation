@@ -92,9 +92,9 @@ const MapWrapper = ({ children }: EPSG4326Map_Props) => {
 
     useEffect(() => {
         if (!displayedStorm) return
-        
+
         setDisplayedDate(displayedStorm.observations[0].date)
-        setDisplayedTime(displayedStorm.observations[0].time.slice(0, 4+1))
+        setDisplayedTime(displayedStorm.observations[0].time.slice(0, 4 + 1))
     }, [displayedStorm])
 
     // const onDateChange = useCallback((idx: number) => {
@@ -107,17 +107,22 @@ const MapWrapper = ({ children }: EPSG4326Map_Props) => {
     // }, [displayedStorm]);
 
     const incrementInfiniteDate = useCallback((date: Date) => {
-        date.setDate(date.getDate() + 1)
-        return date;
+        console.log(`before increment ${date.toUTCString()}`)
+        const newDate = new Date(date)
+        newDate.setDate(newDate.getDate() + 1)
+        console.log(`after increment ${newDate.toUTCString()}`)
+        return newDate;
     }, []);
 
     const decrementInfiniteDate = useCallback((date: Date) => {
-        date.setDate(date.getDate() - 1)
-        return date;
+        const newDate = new Date(date)
+        newDate.setDate(newDate.getDate() - 1)
+        return newDate;
     }, []);
 
     const onInfiniteDateChange = useCallback((date: string, time: string) => {
         if (date && time) {
+            console.log(`From date change func ${date}, ${time}`)
             setDisplayedDate(date)
             setDisplayedTime(time)
         }
@@ -170,7 +175,7 @@ const MapWrapper = ({ children }: EPSG4326Map_Props) => {
                     </div>
                     <div>
                         Show All Hurricanes
-                        <Switch checked={showAllHurricanes} onCheckedChange={setShowAllHurricanes} />
+                        {/* <Switch checked={showAllHurricanes} onCheckedChange={setShowAllHurricanes} /> */}
                     </div>
                 </CardContent>
             </Card>
@@ -178,7 +183,7 @@ const MapWrapper = ({ children }: EPSG4326Map_Props) => {
             <Map>
                 <div className="absolute bottom-0 left-0 z-[400] bg-white">
                     <InfiniteDateSliderComponent startDate={displayedDate} incrementDate={incrementInfiniteDate} decrementDate={decrementInfiniteDate} onDateChange={onInfiniteDateChange} />
-                </div> 
+                </div>
                 <WMSTileLayer
                     url="https://ows.terrestris.de/osm/service?"
                     layers="OSM-WMS"
@@ -191,17 +196,17 @@ const MapWrapper = ({ children }: EPSG4326Map_Props) => {
                 {/* GIBS Tile Layer */}
                 <GIBSTileLayer date={displayedDate} time={displayedTime} config={selectedLayer ?? GIBS_ConfigOptions[0]} />
 
-                {showAllHurricanes ? 
-                    (displayedDate && displayedTime && 
+                {showAllHurricanes ?
+                    (displayedDate && displayedTime &&
                         <PlayHurricaneMarkers stormData={stormData} displayedDate={displayedDate} displayedTime={displayedTime} />
                     )
                     :
-                    (displayedStorm && displayedDate && 
+                    (displayedStorm && displayedDate &&
                         <StormMarkers stormData={displayedStorm.observations} currentDisplayedDate={displayedDate} stormId={displayedStorm.storm_id} stormName={displayedStorm.name} />
                     )
                 }
 
-                <HeatmapLayer />
+                <HeatmapLayer date={displayedDate} time={displayedTime} />
             </Map>
 
         </div>

@@ -35,20 +35,37 @@ interface TemperatureData {
     features: GeoJSONFeature[]
 }
 
+type Props = {
+    date: string
+    time: string
+}
 
-const HeatmapLayer = () => {
+
+const HeatmapLayer = ( { date, time }: Props) => {
     const map = useMap();
     const [temperatureData, setTemperatureData] = useState<TemperatureData | undefined>();
+    const [currentDate, setCurrentDate] = useState('2019-09-01');
+    const [currentTime, setCurrentTime] = useState('00:00'); // not incrementing by 6h rn so this doesnt get used
 
     useEffect(() => {
+        setCurrentDate(date)
+        setCurrentTime(time)
+    }, [date, time])
+
+    useEffect(() => {
+        const fileName = formatFileForDateTime(currentDate, currentTime)
+        console.log(`Inputted date and time ${currentDate}, ${currentTime}`)
+                console.log(`Heatmap file: ${fileName}`)
         const fetchData = async () => {
             try {
-                const response = await fetch('/temperature_20200101_000000_merged.geojson')
+                const fileName = formatFileForDateTime(currentDate, currentTime)
+                console.log(`Heatmap file: ${fileName}`)
+                const response = await fetch('/temperature_data/temperature_20200101_000000_merged.geojson')
                 if (!response.ok) {
                     throw new Error('Failed to fetch temperature data')
                 }
                 const data: TemperatureData = await response.json()
-                console.log(data)
+                // console.log(data)
                 setTemperatureData(data)
             } catch (err) {
                 console.log('Error loading temperature data: ' + err)
@@ -56,7 +73,7 @@ const HeatmapLayer = () => {
         }
 
         fetchData()
-    }, [])
+    }, [currentDate, currentTime])
 
     useEffect(() => {
         if (!map || !temperatureData) return;
@@ -102,6 +119,16 @@ const HeatmapLayer = () => {
             heatLayer.removeFrom(map);
         };
     }, [temperatureData]);
+
+    function formatFileForDateTime(dateString: string, timeString: string) {
+        const [year, month, day] = dateString.split('-');
+        const [hours, minutes] = timeString.split(':');
+      
+        const formattedDate = `${year}${month.padStart(2, '0')}${day.padStart(2, '0')}`;
+        const formattedTime = `${hours.padStart(2, '0')}${minutes.padStart(2, '0')}00`; 
+      
+        return `temperature_data/temperature_${formattedDate}_${formattedTime}_merged.geojson`;
+      }
 
     return null;
 }

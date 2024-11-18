@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { useEffect, useState } from "react"
+import { parseLocalDate } from "@/utils/dateUtils"
 
 interface DateSliderProps {
-    startDate?: string
+    startDate: string
     incrementDate: (date: Date) => Date
     decrementDate: (date: Date) => Date
     onDateChange: (date: string, time: string) => void
@@ -16,35 +17,62 @@ interface DateSliderProps {
 
 export function InfiniteDateSliderComponent({ startDate, incrementDate, decrementDate, onDateChange }: DateSliderProps) {
     const [isPlaying, setIsPlaying] = React.useState(false)
-    const [currentDate, setCurrentDate] = useState<Date>(new Date('2019-09-01'));
-    const [dateIncrement, setDateIncrement] = useState(0);
 
-    useEffect(() => {
-        if (startDate) {
-            setCurrentDate(new Date(startDate))
-        }
-    }, [startDate])
+    // useEffect(() => {
+    //     if (startDate) {
+    //         console.log(`start date changed so setting to ${startDate}`)
+    //         setCurrentDate(new Date(startDate))
+    //     }
+    // }, [startDate])
+
+    // const nextSlide = () => {
+    //     const currentDate = new Date(startDate)
+    //     console.log(`from next slide before, ${currentDate} + 1 day`)
+    //     let incrementedDate = incrementDate(currentDate)
+    //     console.log(`from next slide after, ${incrementedDate}`)
+    //     setCurrentDate(incrementedDate);
+    //     setDateIncrement((inc) => inc+1)
+    // }
+
+    // const prevSlide = () => {
+    //     const currentDate = new Date(startDate)
+    //     setCurrentDate(decrementDate(currentDate));
+    //     setDateIncrement((inc) => inc-1)
+    // }
 
     const nextSlide = () => {
-        setCurrentDate(incrementDate(currentDate));
-        setDateIncrement((inc) => inc+1)
-    }
+        const current = parseLocalDate(startDate);
+        const incrementedDate = incrementDate(current);
+        onDateChange(
+            incrementedDate.toISOString().slice(0, 10),
+            incrementedDate.toISOString().slice(11, 19)
+        );
+    };
 
     const prevSlide = () => {
-        setCurrentDate(decrementDate(currentDate));
-        setDateIncrement((inc) => inc+1)
-    }
+        const current = parseLocalDate(startDate);
+        const decrementedDate = decrementDate(current);
+        onDateChange(
+            decrementedDate.toISOString().slice(0, 10),
+            decrementedDate.toISOString().slice(11, 19)
+        );
+    };
 
     const togglePlay = () => {
         setIsPlaying((prev) => !prev)
     }
 
+    // const handleDateSelect = (date: Date | undefined) => {
+    //     if (date) {
+    //         setCurrentDate(date);
+    //         setDateIncrement((inc) => inc + 1);
+    //     }
+    // }
     const handleDateSelect = (date: Date | undefined) => {
         if (date) {
-            setCurrentDate(date);
-            setDateIncrement((inc) => inc + 1);
+            onDateChange(date.toISOString().slice(0, 10), date.toISOString().slice(11, 19));
         }
-    }
+    };
 
     React.useEffect(() => {
         let intervalId: NodeJS.Timeout
@@ -56,13 +84,11 @@ export function InfiniteDateSliderComponent({ startDate, incrementDate, decremen
         }
     }, [isPlaying])
 
-    React.useEffect(() => {
-        onDateChange(currentDate.toISOString().slice(0, 10), currentDate.toISOString().slice(11, 19))
-    }, [currentDate.toISOString()])
+    // React.useEffect(() => {
+    //     console.log(`from use effect, ${currentDate.toISOString()}`)
+    //     onDateChange(currentDate.toISOString().slice(0, 10), currentDate.toISOString().slice(11, 19))
+    // }, [currentDate.toISOString()])
 
-    React.useEffect(() => {
-        // setIsPlaying(false)
-    }, [startDate])
 
     return (
         <div className="w-full max-w-md mx-auto py-6 px-2 space-y-6">
@@ -77,7 +103,7 @@ export function InfiniteDateSliderComponent({ startDate, incrementDate, decremen
                     <PopoverContent className="w-auto p-0 z-[999]" align="end">
                         <CalendarComponent
                             mode="single"
-                            selected={currentDate}
+                            selected={new Date(startDate)}
                             onSelect={handleDateSelect}
                             initialFocus
                         />
@@ -87,14 +113,14 @@ export function InfiniteDateSliderComponent({ startDate, incrementDate, decremen
             <div className="relative h-12 bg-muted rounded-lg overflow-hidden">
                 <AnimatePresence initial={false}>
                     <motion.div
-                        key={dateIncrement}
+                        key={startDate}
                         initial={{ opacity: 0, x: 50 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -50 }}
                         transition={{ type: "spring", stiffness: 300, damping: 30 }}
                         className="absolute inset-0 flex items-center justify-center text-xl font-mono font-bold"
                     >
-                        {currentDate.toDateString()}
+                        {parseLocalDate(startDate).toDateString()}
                     </motion.div>
                 </AnimatePresence>
             </div>
