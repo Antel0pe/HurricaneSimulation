@@ -1,3 +1,4 @@
+// infinite-date-slider.tsx
 "use client"
 import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
@@ -5,7 +6,7 @@ import { ChevronLeft, ChevronRight, Play, Pause, Calendar } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { parseLocalDate } from "@/utils/dateUtils"
 
 interface DateSliderProps {
@@ -17,6 +18,12 @@ interface DateSliderProps {
 
 export function InfiniteDateSliderComponent({ startDate, incrementDate, decrementDate, onDateChange }: DateSliderProps) {
     const [isPlaying, setIsPlaying] = React.useState(false)
+    const startDateRef = useRef(startDate);
+
+    useEffect(() => {
+        startDateRef.current = startDate;
+    }, [startDate]);
+
 
     // useEffect(() => {
     //     if (startDate) {
@@ -41,7 +48,7 @@ export function InfiniteDateSliderComponent({ startDate, incrementDate, decremen
     // }
 
     const nextSlide = () => {
-        const current = parseLocalDate(startDate);
+        const current = parseLocalDate(startDateRef.current);
         const incrementedDate = incrementDate(current);
         onDateChange(
             incrementedDate.toISOString().slice(0, 10),
@@ -50,7 +57,7 @@ export function InfiniteDateSliderComponent({ startDate, incrementDate, decremen
     };
 
     const prevSlide = () => {
-        const current = parseLocalDate(startDate);
+        const current = parseLocalDate(startDateRef.current);
         const decrementedDate = decrementDate(current);
         onDateChange(
             decrementedDate.toISOString().slice(0, 10),
