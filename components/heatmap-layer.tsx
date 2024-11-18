@@ -49,20 +49,17 @@ const HeatmapLayer = ( { date, time }: Props) => {
 
     useEffect(() => {
         setCurrentDate(date)
-        setCurrentTime(time)
+        setCurrentTime('00:00') // not using time
     }, [date, time])
 
     useEffect(() => {
-        const fileName = formatFileForDateTime(currentDate, currentTime)
-        console.log(`Inputted date and time ${currentDate}, ${currentTime}`)
-                console.log(`Heatmap file: ${fileName}`)
         const fetchData = async () => {
             try {
                 const fileName = formatFileForDateTime(currentDate, currentTime)
-                console.log(`Heatmap file: ${fileName}`)
-                const response = await fetch('/temperature_data/temperature_20200101_000000_merged.geojson')
+                console.log('temp data from file ' + fileName)
+                const response = await fetch(fileName)
                 if (!response.ok) {
-                    throw new Error('Failed to fetch temperature data')
+                    throw new Error('Failed to fetch temperature data from file ' + fileName)
                 }
                 const data: TemperatureData = await response.json()
                 // console.log(data)
@@ -127,7 +124,7 @@ const HeatmapLayer = ( { date, time }: Props) => {
         const formattedDate = `${year}${month.padStart(2, '0')}${day.padStart(2, '0')}`;
         const formattedTime = `${hours.padStart(2, '0')}${minutes.padStart(2, '0')}00`; 
       
-        return `temperature_data/temperature_${formattedDate}_${formattedTime}_merged.geojson`;
+        return `local_data/temperature_${formattedDate}_${formattedTime}_merged.geojson`;
       }
 
     return null;
