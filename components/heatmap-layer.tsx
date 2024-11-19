@@ -40,6 +40,9 @@ type Props = {
     time: string
 }
 
+/**
+ * Should analyze sea surface temp not 850hpa
+ */
 
 const HeatmapLayer = ( { date, time }: Props) => {
     const map = useMap();
@@ -83,8 +86,8 @@ const HeatmapLayer = ( { date, time }: Props) => {
 
                 // Normalize temperature to a positive intensity value
                 // Assuming temperature ranges from -50°C to 50°C
-                const minTemp = -50;
-                const maxTemp = 50;
+                const minTemp = -100;
+                const maxTemp = 40;
                 let intensity = (tempNumber - minTemp) / (maxTemp - minTemp);
 
                 // Clamp intensity between 0 and 1
