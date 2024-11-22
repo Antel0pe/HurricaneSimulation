@@ -17,6 +17,7 @@ import { AutocompleteSearchComponent } from "./autocomplete-search";
 import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 import HeatmapLayer from "./heatmap-layer";
+import { HurricaneDataLayer, HurricaneLayerSelector } from "./hurricane-layer-selector";
 
 const Map = dynamic(() => import("./EPSG4326Map"), { ssr: false });
 
@@ -60,6 +61,21 @@ const GIBS_ConfigOptions: GIBS_TileLayerConfig[] = [
     },
 ]
 
+const availableLayers: HurricaneDataLayer[] = [
+    {
+        id: "option1",
+        name: "Option 1"
+    },
+    {
+        id: "option2",
+        name: "Option 2"
+    },
+    {
+        id: "option3",
+        name: "Option 3"
+    }
+]
+
 const MapWrapper = ({ children }: EPSG4326Map_Props) => {
     const [stormData, setStormData] = useState<StormData[]>([])
     const [error, setError] = useState<string | null>(null)
@@ -70,6 +86,7 @@ const MapWrapper = ({ children }: EPSG4326Map_Props) => {
     const [displayedDate, setDisplayedDate] = useState<string>('2019-09-01');
     const [displayedTime, setDisplayedTime] = useState<string>('00:00');
     const [showAllHurricanes, setShowAllHurricanes] = useState<boolean>(true);
+    const [hurricaneDataLayer, setHurricaneDataLayer] = useState<HurricaneDataLayer>(availableLayers[0]);
 
 
 
@@ -130,6 +147,11 @@ const MapWrapper = ({ children }: EPSG4326Map_Props) => {
         }
     }, []);
 
+    const onHurricaneDataLayerChange = useCallback((layer: HurricaneDataLayer) => {
+        setHurricaneDataLayer(layer)
+        console.log(layer.id + ' selected')
+    }, [])
+
 
     const createStormName = (storm: StormData) => {
         return storm.name + ' ' + storm.storm_id;
@@ -183,7 +205,7 @@ const MapWrapper = ({ children }: EPSG4326Map_Props) => {
             </Card>
 
             <Map>
-                <div className="absolute bottom-0 left-0 z-[400] bg-white">
+                <div className="absolute bottom-0 left-0 z-[400] w-72 bg-white">
                     <InfiniteDateSliderComponent startDate={displayedDate} incrementDate={incrementInfiniteDate} decrementDate={decrementInfiniteDate} onDateChange={onInfiniteDateChange} />
                 </div>
                 <WMSTileLayer
@@ -209,6 +231,8 @@ const MapWrapper = ({ children }: EPSG4326Map_Props) => {
                 }
 
                 <HeatmapLayer date={displayedDate} time={displayedTime} />
+
+                <HurricaneLayerSelector layers={availableLayers} onLayerChange={onHurricaneDataLayerChange}/>
             </Map>
 
         </div>
