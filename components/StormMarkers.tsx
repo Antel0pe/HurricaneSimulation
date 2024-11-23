@@ -12,7 +12,7 @@ interface StormMarkersProps {
 }
 
 export function StormMarkers({ stormData, currentDisplayedDate, stormId, stormName }: StormMarkersProps) {
-    const [currentDate, setCurrentDate] = useState<Date>(new Date('2019-01-01'))
+    const [currentDate, setCurrentDate] = useState<Date>(new Date('2020-01-01'))
 
     useEffect(() => {
         setCurrentDate(new Date(currentDisplayedDate))

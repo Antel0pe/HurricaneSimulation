@@ -18,6 +18,7 @@ import { Alert, AlertTitle, AlertDescription } from "./ui/alert";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 import HeatmapLayer from "./heatmap-layer";
 import { HurricaneDataLayer, HurricaneLayerSelector } from "./hurricane-layer-selector";
+import MSLHeatmapLayer from "./MSL_Heatmap_layer";
 
 const Map = dynamic(() => import("./EPSG4326Map"), { ssr: false });
 
@@ -83,7 +84,7 @@ const MapWrapper = ({ children }: EPSG4326Map_Props) => {
     const [displayedStorm, setDisplayedStorm] = useState<StormData | null>(null)
     const [displayedObservations, setDisplayedObservations] = useState<StormObservation[]>([]);
     const [selectedLayer, setSelectedLayer] = useState<GIBS_TileLayerConfig | null>();
-    const [displayedDate, setDisplayedDate] = useState<string>('2019-09-01');
+    const [displayedDate, setDisplayedDate] = useState<string>('2020-09-01');
     const [displayedTime, setDisplayedTime] = useState<string>('00:00');
     const [showAllHurricanes, setShowAllHurricanes] = useState<boolean>(true);
     const [hurricaneDataLayer, setHurricaneDataLayer] = useState<HurricaneDataLayer>(availableLayers[0]);
@@ -230,7 +231,8 @@ const MapWrapper = ({ children }: EPSG4326Map_Props) => {
                     )
                 }
 
-                <HeatmapLayer date={displayedDate} time={displayedTime} />
+                {/* <HeatmapLayer date={displayedDate} time={displayedTime} /> */}
+                <MSLHeatmapLayer date={displayedDate} time={displayedTime} />
 
                 <HurricaneLayerSelector layers={availableLayers} onLayerChange={onHurricaneDataLayerChange}/>
             </Map>

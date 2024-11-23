@@ -47,7 +47,7 @@ type Props = {
 const HeatmapLayer = ( { date, time }: Props) => {
     const map = useMap();
     const [temperatureData, setTemperatureData] = useState<TemperatureData | undefined>();
-    const [currentDate, setCurrentDate] = useState('2019-09-01');
+    const [currentDate, setCurrentDate] = useState('2020-09-01');
     const [currentTime, setCurrentTime] = useState('00:00'); // not incrementing by 6h rn so this doesnt get used
 
     useEffect(() => {

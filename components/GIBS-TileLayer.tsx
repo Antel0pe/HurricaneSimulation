@@ -20,8 +20,8 @@ export interface GIBS_TileLayerConfig {
 }
 
 const GIBSTileLayer = ({ 
-    date = '2019-09-01', 
-    time = '17:00 UTC', 
+    date = '2020-09-01', 
+    time = '00:00 UTC', 
     config,
     preloadDays = 10 
 }: Props) => {
