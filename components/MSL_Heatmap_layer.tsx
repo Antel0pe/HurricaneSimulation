@@ -80,31 +80,33 @@ const MSLHeatmapLayer = ({ date, time }: Props) => {
             Mean: ${mean}
             StdDev: ${stdDev}`);
 
+        const sortedData = pressureData.filter(d => !isNaN(d.msl)).sort((a, b) => a.msl - b.msl);
+
+
         // Prepare heatmap data: [lat, lng, intensity]
-        const heatData: Array<[number, number, number]> = pressureData
-            .filter(dataPoint =>
-                !isNaN(dataPoint.lat_rounded) &&
-                !isNaN(dataPoint.lon_rounded) &&
-                !isNaN(dataPoint.msl)
-            )
-            .map((dataPoint) => {
-                
-                return [dataPoint.lat_rounded, dataPoint.lon_rounded, getIntensityValue(dataPoint.msl, mean, stdDev)];
+        const heatData: Array<[number, number, number]> = sortedData
+            .map((dataPoint, idx) => {
+                let intensity = parseFloat((idx / sortedData.length).toFixed(5))
+                return [dataPoint.lat_rounded, dataPoint.lon_rounded, getIntensityValue(dataPoint.msl, minPressure, maxPressure)];
             }
             );
 
         // Create the heat layer
         const heatLayer = L.heatLayer(heatData, {
-            radius: 25,
+            radius: 20,
             maxZoom: 5,
             gradient: {
-                0: '#FF00FF',     // Magenta (hurricane)
-                0.2: '#FF0000',   // Red (strong low)
-                0.4: '#FFA500',   // Orange (low pressure)
-                0.5: '#FFFF00',   // Yellow (slightly low)
-                0.6: '#FFFFFF',   // White (normal pressure)
-                0.8: '#00FF00',   // Green (high pressure)
-                1.0: '#0000FF'    // Blue (very high pressure)
+                0.0: '#FF00FF', // Magenta
+                0.1: '#FF0099', // Magenta-Pink
+                0.2: '#FF0044', // Magenta-Red
+                0.3: '#FF0000', // Red
+                0.4: '#FF5500', // Red-Orange
+                0.5: '#FFA500', // Orange
+                0.6: '#FFD700', // Orange-Yellow
+                0.7: '#FFFF00', // Yellow
+                0.8: '#80FF80', // Yellow-Green
+                0.9: '#0080FF', // Cyan-Blue
+                1.0: '#0000FF'  // Blue
             },
             blur: 15,
             // max: 0.8,
@@ -130,16 +132,11 @@ const MSLHeatmapLayer = ({ date, time }: Props) => {
         return `local_data/msl_csv/msl_${formattedDate}_${formattedTime}.csv`;
     }
 
-    function getIntensityValue(val: number, mean: number, stdDev: number) {
-        // Use z-score based normalization for better distribution
-        const zScore = (val - mean) / stdDev;
-
-         // Convert z-score to 0-1 range, clamping at ±2 standard deviations
-         const intensity = Math.max(0, Math.min(1, (zScore + 3) / 6));
-
-        // console.log(intensity)
-
-        return intensity;
+    function getIntensityValue(val: number, min: number, max: number) {
+        if (val <= min) return 0; // Low pressure
+        if (val >= max) return 1; // High pressure
+        // Linear interpolation for mid-range
+        return (max - val) / (max - min);
     }
 
     return null;
