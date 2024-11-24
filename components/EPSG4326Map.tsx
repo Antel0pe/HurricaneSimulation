@@ -52,7 +52,7 @@ const EPSG4326Map = ({ children }: EPSG4326Map_Props) => {
 
     return (
         <MapContainer
-            center={[0, 0]}
+            center={[16, -45]}
             zoom={2}
             maxZoom={8}
             crs={proj}

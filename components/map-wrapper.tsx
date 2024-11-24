@@ -184,10 +184,10 @@ const MapWrapper = ({ children }: EPSG4326Map_Props) => {
                             <AutocompleteSearchComponent data={GIBS_ConfigOptions} displayText={createGIBSConfigDisplayText} setSelectedItems={setSelectedLayer} />
                         </div>
                     </div>
-                    <div>
+                    {/* <div>
                         Show All Hurricanes
-                        {/* <Switch checked={showAllHurricanes} onCheckedChange={setShowAllHurricanes} /> */}
-                    </div>
+                        <Switch checked={showAllHurricanes} onCheckedChange={setShowAllHurricanes} />
+                    </div> */}
                 </CardContent>
             </Card>
 
