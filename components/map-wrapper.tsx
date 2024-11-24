@@ -87,7 +87,7 @@ const MapWrapper = ({ children }: EPSG4326Map_Props) => {
     const [displayedDate, setDisplayedDate] = useState<string>('2020-09-01');
     const [displayedTime, setDisplayedTime] = useState<string>('00:00');
     const [showAllHurricanes, setShowAllHurricanes] = useState<boolean>(true);
-    const [hurricaneDataLayer, setHurricaneDataLayer] = useState<HurricaneDataLayer>(availableLayers[0]);
+    const [hurricaneDataLayer, setHurricaneDataLayer] = useState<HurricaneDataLayer | null>(null);
 
 
 
@@ -148,9 +148,9 @@ const MapWrapper = ({ children }: EPSG4326Map_Props) => {
         }
     }, []);
 
-    const onHurricaneDataLayerChange = useCallback((layer: HurricaneDataLayer) => {
+    const onHurricaneDataLayerChange = useCallback((layer: HurricaneDataLayer | null) => {
         setHurricaneDataLayer(layer)
-        console.log(layer.id + ' selected')
+        console.log(layer?.id + ' selected')
     }, [])
 
 

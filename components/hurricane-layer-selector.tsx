@@ -15,7 +15,7 @@ export interface HurricaneDataLayer {
 interface HurricaneLayerSelectorProps {
     layers: HurricaneDataLayer[]
     initialLayer?: string
-    onLayerChange: (layer: HurricaneDataLayer) => void
+    onLayerChange: (layer: HurricaneDataLayer | null) => void
 }
 
 export function HurricaneLayerSelector({
@@ -23,15 +23,22 @@ export function HurricaneLayerSelector({
     initialLayer,
     onLayerChange,
 }: HurricaneLayerSelectorProps) {
-    const [selectedLayer, setSelectedLayer] = React.useState(initialLayer || layers[0]?.id)
+    const [selectedLayer, setSelectedLayer] = React.useState<string | undefined>(undefined)
     const [isMinimized, setIsMinimized] = React.useState(false)
 
-    const handleLayerChange = (value: string) => {
-        setSelectedLayer(value)
-
-        let matchingLayer = layers.filter((l) => l.id === value);
-        if (matchingLayer.length > 0) {
-            onLayerChange(matchingLayer[0])
+    const handleLayerChange = (value: string | undefined) => {
+        console.log('value is ' + value)
+        // deselect option
+        if (value && value === selectedLayer) {
+            setSelectedLayer(undefined)
+            onLayerChange(null)
+        } else {
+            setSelectedLayer(value)
+            
+            let matchingLayer = layers.filter((l) => l.id === value);
+            if (matchingLayer.length > 0) {
+                onLayerChange(matchingLayer[0])
+            }
         }
     }
 
@@ -67,11 +74,11 @@ export function HurricaneLayerSelector({
                             </Button>
                         </div>
                         <ScrollArea className="h-[200px] pr-4">
-                            <RadioGroup value={selectedLayer} onValueChange={handleLayerChange}>
+                            <RadioGroup >
                                 {layers.map((layer) => (
-                                    <div key={layer.id} className="flex items-center space-x-2 mb-4">
-                                        <RadioGroupItem value={layer.id} id={layer.id} />
-                                        <Label htmlFor={layer.id}>{layer.name}</Label>
+                                    <div key={layer.id} className="flex items-center space-x-2 mb-4" onClick={() => handleLayerChange(layer.id)}>
+                                        <RadioGroupItem checked={selectedLayer === layer.id} value={layer.id} id={layer.id} />
+                                        <Label>{layer.name}</Label>
                                     </div>
                                 ))}
                             </RadioGroup>
