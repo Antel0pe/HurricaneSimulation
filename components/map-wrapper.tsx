@@ -19,6 +19,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "./ui/card";
 import HeatmapLayer from "./heatmap-layer";
 import { HurricaneDataLayer, HurricaneLayerSelector } from "./hurricane-layer-selector";
 import MSLHeatmapLayer from "./MSL_Heatmap_layer";
+import LayerManager, { availableLayers } from "./LayerManager";
 
 const Map = dynamic(() => import("./EPSG4326Map"), { ssr: false });
 
@@ -60,21 +61,6 @@ const GIBS_ConfigOptions: GIBS_TileLayerConfig[] = [
         tileMatrixSet: '2km',
         image: 'png',
     },
-]
-
-const availableLayers: HurricaneDataLayer[] = [
-    {
-        id: "option1",
-        name: "Option 1"
-    },
-    {
-        id: "option2",
-        name: "Option 2"
-    },
-    {
-        id: "option3",
-        name: "Option 3"
-    }
 ]
 
 const MapWrapper = ({ children }: EPSG4326Map_Props) => {
@@ -232,7 +218,8 @@ const MapWrapper = ({ children }: EPSG4326Map_Props) => {
                 }
 
                 {/* <HeatmapLayer date={displayedDate} time={displayedTime} /> */}
-                <MSLHeatmapLayer date={displayedDate} time={displayedTime} />
+                {/* <MSLHeatmapLayer date={displayedDate} time={displayedTime} /> */}
+                <LayerManager selectedLayer={hurricaneDataLayer} displayedDate={displayedDate} displayedTime={displayedTime} />
 
                 <HurricaneLayerSelector layers={availableLayers} onLayerChange={onHurricaneDataLayerChange}/>
             </Map>
