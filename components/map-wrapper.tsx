@@ -20,6 +20,7 @@ import HeatmapLayer from "./heatmap-layer";
 import { HurricaneDataLayer, HurricaneLayerSelector } from "./hurricane-layer-selector";
 import MSLHeatmapLayer from "./MSL_Heatmap_layer";
 import LayerManager, { availableLayers } from "./LayerManager";
+import { DateTime } from "luxon";
 
 const Map = dynamic(() => import("./EPSG4326Map"), { ssr: false });
 
@@ -70,12 +71,9 @@ const MapWrapper = ({ children }: EPSG4326Map_Props) => {
     const [displayedStorm, setDisplayedStorm] = useState<StormData | null>(null)
     const [displayedObservations, setDisplayedObservations] = useState<StormObservation[]>([]);
     const [selectedLayer, setSelectedLayer] = useState<GIBS_TileLayerConfig | null>();
-    const [displayedDate, setDisplayedDate] = useState<string>('2020-09-01');
-    const [displayedTime, setDisplayedTime] = useState<string>('00:00');
+    const [displayedDateTime, setDisplayedDateTime] = useState<DateTime>(DateTime.fromISO('2020-09-01T00:00:00Z'));
     const [showAllHurricanes, setShowAllHurricanes] = useState<boolean>(true);
     const [hurricaneDataLayer, setHurricaneDataLayer] = useState<HurricaneDataLayer | null>(null);
-
-
 
     useEffect(() => {
         const fetchData = async () => {
@@ -99,46 +97,27 @@ const MapWrapper = ({ children }: EPSG4326Map_Props) => {
     useEffect(() => {
         if (!displayedStorm) return
 
-        setDisplayedDate(displayedStorm.observations[0].date)
-        setDisplayedTime(displayedStorm.observations[0].time.slice(0, 4 + 1))
+        const date = displayedStorm.observations[0].date;
+        const time = displayedStorm.observations[0].time.slice(0, 4 + 1);
+        setDisplayedDateTime(DateTime.fromFormat(`${date}T${time}`, 'yyyy-MM-ddTHH:mm', { zone: 'utc' }));
     }, [displayedStorm])
 
-    // const onDateChange = useCallback((idx: number) => {
-    //     if (displayedStorm) {
-    //         // console.log(`displayed date ${displayedStorm.observations[idx].date}`)
-    //         setDisplayedObservations(displayedStorm.observations.slice(0, idx + 1));
-    //         setDisplayedDate(displayedStorm.observations[idx].date)
-    //         setDisplayedTime((displayedStorm.observations[idx].time))
-    //     }
-    // }, [displayedStorm]);
-
-    const incrementInfiniteDate = useCallback((date: Date) => {
-        // console.log(`before increment ${date.toUTCString()}`)
-        const newDate = new Date(date)
-        newDate.setDate(newDate.getDate() + 1)
-        // console.log(`after increment ${newDate.toUTCString()}`)
-        return newDate;
+    const incrementInfiniteDate = useCallback((date: DateTime) => {
+        return date.plus({ days: 1 });
     }, []);
 
-    const decrementInfiniteDate = useCallback((date: Date) => {
-        const newDate = new Date(date)
-        newDate.setDate(newDate.getDate() - 1)
-        return newDate;
+    const decrementInfiniteDate = useCallback((date: DateTime) => {
+        return date.minus({ days: 1 });
     }, []);
 
-    const onInfiniteDateChange = useCallback((date: string, time: string) => {
-        if (date && time) {
-            // console.log(`From date change func ${date}, ${time}`)
-            setDisplayedDate(date)
-            setDisplayedTime(time)
-        }
+    const onInfiniteDateChange = useCallback((date: DateTime) => {
+        setDisplayedDateTime(date);
     }, []);
 
     const onHurricaneDataLayerChange = useCallback((layer: HurricaneDataLayer | null) => {
         setHurricaneDataLayer(layer)
         console.log(layer?.id + ' selected')
     }, [])
-
 
     const createStormName = (storm: StormData) => {
         return storm.name + ' ' + storm.storm_id;
@@ -172,11 +151,9 @@ const MapWrapper = ({ children }: EPSG4326Map_Props) => {
                     <div className="space-y-4">
                         <div>
                             <Label htmlFor="search">Search by Storm Name</Label>
-                            {/* items={stormData.map((s) => s.name + ' ' + s.storm_id)} */}
                             <AutocompleteSearchComponent data={stormData} displayText={createStormName} setSelectedItems={setDisplayedStorm} />
                         </div>
                     </div>
-
 
                     <div className="space-y-4">
                         <div>
@@ -192,8 +169,19 @@ const MapWrapper = ({ children }: EPSG4326Map_Props) => {
             </Card>
 
             <Map>
-                <div className="absolute bottom-0 left-0 z-[400] w-72 bg-white">
-                    <InfiniteDateSliderComponent startDate={displayedDate} incrementDate={incrementInfiniteDate} decrementDate={decrementInfiniteDate} onDateChange={onInfiniteDateChange} />
+                <div
+                    className="absolute bottom-0 left-0 z-[400] w-72 bg-white"
+                    onWheelCapture={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }}>
+
+                    <InfiniteDateSliderComponent
+                        startDate={displayedDateTime}
+                        incrementDate={incrementInfiniteDate}
+                        decrementDate={decrementInfiniteDate}
+                        onDateChange={setDisplayedDateTime}
+                    />
                 </div>
                 <WMSTileLayer
                     url="https://ows.terrestris.de/osm/service?"
@@ -204,26 +192,39 @@ const MapWrapper = ({ children }: EPSG4326Map_Props) => {
                     // continuousWorld={true}
                     noWrap={true}
                 />
-                {/* GIBS Tile Layer */}
-                <GIBSTileLayer date={displayedDate} time={displayedTime} config={selectedLayer ?? GIBS_ConfigOptions[0]} />
+                <GIBSTileLayer
+                    date={displayedDateTime.toFormat('yyyy-MM-dd')}
+                    time={displayedDateTime.toFormat('HH:mm')}
+                    config={selectedLayer ?? GIBS_ConfigOptions[0]}
+                />
 
                 {showAllHurricanes ?
-                    (displayedDate && displayedTime &&
-                        <PlayHurricaneMarkers stormData={stormData} displayedDate={displayedDate} displayedTime={displayedTime} />
+                    (displayedDateTime &&
+                        <PlayHurricaneMarkers
+                            stormData={stormData}
+                            displayedDate={displayedDateTime.toFormat('yyyy-MM-dd')}
+                            displayedTime={displayedDateTime.toFormat('HH:mm')}
+                        />
                     )
                     :
-                    (displayedStorm && displayedDate &&
-                        <StormMarkers stormData={displayedStorm.observations} currentDisplayedDate={displayedDate} stormId={displayedStorm.storm_id} stormName={displayedStorm.name} />
+                    (displayedStorm && displayedDateTime &&
+                        <StormMarkers
+                            stormData={displayedStorm.observations}
+                            currentDisplayedDate={displayedDateTime.toFormat('yyyy-MM-dd')}
+                            stormId={displayedStorm.storm_id}
+                            stormName={displayedStorm.name}
+                        />
                     )
                 }
 
-                {/* <HeatmapLayer date={displayedDate} time={displayedTime} /> */}
-                {/* <MSLHeatmapLayer date={displayedDate} time={displayedTime} /> */}
-                <LayerManager selectedLayer={hurricaneDataLayer} displayedDate={displayedDate} displayedTime={displayedTime} />
+                <LayerManager
+                    selectedLayer={hurricaneDataLayer}
+                    displayedDate={displayedDateTime.toFormat('yyyy-MM-dd')}
+                    displayedTime={displayedDateTime.toFormat('HH:mm')}
+                />
 
-                <HurricaneLayerSelector layers={availableLayers} onLayerChange={onHurricaneDataLayerChange}/>
+                <HurricaneLayerSelector layers={availableLayers} onLayerChange={onHurricaneDataLayerChange} />
             </Map>
-
         </div>
     );
 };
