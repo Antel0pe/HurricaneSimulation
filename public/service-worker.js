@@ -40,17 +40,17 @@ self.addEventListener('message', (event) => {
 self.addEventListener('fetch', (event) => {
     const request = event.request;
     const url = new URL(request.url);
-    console.log('fetch service worker')
-    console.log(request.url)
-    console.log(TILE_URL_PATTERN.test(request.url))
+    // console.log('fetch service worker')
+    // console.log(request.url)
+    // console.log(TILE_URL_PATTERN.test(request.url))
     if (TILE_URL_PATTERN.test(request.url)) {
-        console.log(`Service Worker intercepting tile request: ${request.url}`);
+        // console.log(`Service Worker intercepting tile request: ${request.url}`);
         event.respondWith(
             caches.open(CACHE_NAME).then((cache) => {
                 return cache.match(request).then((cachedResponse) => {
-                    console.log(`service worker: checking ${request.url}`)
+                    // console.log(`service worker: checking ${request.url}`)
                     if (cachedResponse) {
-                        console.log(`serving from cache ${request.url}`)
+                        // console.log(`serving from cache ${request.url}`)
                         // Serve from cache
                         return cachedResponse;
                     }

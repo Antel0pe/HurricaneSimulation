@@ -27,7 +27,6 @@ export function HurricaneLayerSelector({
     const [isMinimized, setIsMinimized] = React.useState(false)
 
     const handleLayerChange = (value: string | undefined) => {
-        console.log('value is ' + value)
         // deselect option
         if (value && value === selectedLayer) {
             setSelectedLayer(undefined)

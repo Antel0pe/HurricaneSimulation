@@ -71,7 +71,7 @@ const MapWrapper = ({ children }: EPSG4326Map_Props) => {
     const [displayedStorm, setDisplayedStorm] = useState<StormData | null>(null)
     const [displayedObservations, setDisplayedObservations] = useState<StormObservation[]>([]);
     const [selectedLayer, setSelectedLayer] = useState<GIBS_TileLayerConfig | null>();
-    const [displayedDateTime, setDisplayedDateTime] = useState<DateTime>(DateTime.fromISO('2020-09-01T00:00:00Z'));
+    const [displayedDateTime, setDisplayedDateTime] = useState<DateTime>(DateTime.fromISO('2020-05-01T00:00:00'));
     const [showAllHurricanes, setShowAllHurricanes] = useState<boolean>(true);
     const [hurricaneDataLayer, setHurricaneDataLayer] = useState<HurricaneDataLayer | null>(null);
 
@@ -103,11 +103,11 @@ const MapWrapper = ({ children }: EPSG4326Map_Props) => {
     }, [displayedStorm])
 
     const incrementInfiniteDate = useCallback((date: DateTime) => {
-        return date.plus({ days: 1 });
+        return date.plus({ hours: 6 });
     }, []);
 
     const decrementInfiniteDate = useCallback((date: DateTime) => {
-        return date.minus({ days: 1 });
+        return date.minus({ hours: 6 });
     }, []);
 
     const onInfiniteDateChange = useCallback((date: DateTime) => {
@@ -221,6 +221,7 @@ const MapWrapper = ({ children }: EPSG4326Map_Props) => {
                     selectedLayer={hurricaneDataLayer}
                     displayedDate={displayedDateTime.toFormat('yyyy-MM-dd')}
                     displayedTime={displayedDateTime.toFormat('HH:mm')}
+                    displayedDateTime={displayedDateTime}
                 />
 
                 <HurricaneLayerSelector layers={availableLayers} onLayerChange={onHurricaneDataLayerChange} />
