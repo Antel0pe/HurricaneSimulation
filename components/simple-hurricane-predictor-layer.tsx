@@ -33,7 +33,7 @@ const SimplePredictHurricaneLayer = ({ datetime }: Props) => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const fileName = 'matching-hurricane-rows.csv';
+                const fileName = 'era5ForAllLatLongOnHurDat2ObservationDates.csv';
                 const response = await fetch(fileName);
 
                 if (!response.ok) {
