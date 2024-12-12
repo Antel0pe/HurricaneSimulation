@@ -5,6 +5,7 @@
 /processed-2020-temp/processed/*
 /processed-2020-temp/processed.zip
 /public/local_data/*
+/public/*.csv
 
 # dependencies
 /node_modules
